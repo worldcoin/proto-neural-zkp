@@ -102,6 +102,7 @@ fn init_tokio() -> EyreResult<Runtime> {
         .enable_all()
         .build()
         .wrap_err("Error creating Tokio runtime")
+    // TODO: Log num_workers once RuntimeMetrics are stable
 }
 
 #[cfg(test)]

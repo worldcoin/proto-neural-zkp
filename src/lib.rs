@@ -15,18 +15,35 @@ use plonky2::{
 use rand::Rng as _;
 use structopt::StructOpt;
 use tracing::{info, trace};
+use bytesize::ByteSize;
 
 type Rng = rand_pcg::Mcg128Xsl64;
 
 #[derive(Clone, Debug, PartialEq, StructOpt)]
 pub struct Options {
     /// The size of the input layer
-    #[structopt(long, default_value = "5000")]
+    #[structopt(long, default_value = "1000")]
     pub input_size: usize,
 
     /// The size of the output layer
-    #[structopt(long, default_value = "5000")]
+    #[structopt(long, default_value = "1000")]
     pub output_size: usize,
+
+    /// Coefficient bits
+    #[structopt(long, default_value = "16")]
+    pub coefficient_bits: usize,
+
+    /// Number of wire columns
+    #[structopt(long, default_value = "400")]
+    pub num_wires: usize,
+
+    /// Number of routed wire columns
+    #[structopt(long, default_value = "400")]
+    pub num_routed_wires: usize,
+
+    /// Number of constants per constant gate
+    #[structopt(long, default_value = "90")]
+    pub constant_gate_size: usize,
 }
 
 const D: usize = 2;
@@ -39,8 +56,6 @@ type Builder = CircuitBuilder<F, D>;
 // https://en.wikipedia.org/wiki/Freivalds%27_algorithm ?
 
 fn to_field(value: i32) -> F {
-    let value = value >> 24;
-    assert!(value.abs() <= 128);
     if value >= 0 {
         F::from_canonical_u32(value as u32)
     } else {
@@ -52,13 +67,13 @@ fn to_field(value: i32) -> F {
 fn dot(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Target {
     // TODO: Compare this accumulator approach against a batch sum.
     assert_eq!(coefficients.len(), input.len());
-    builder.push_context(Level::Info, "dot");
+    // builder.push_context(Level::Info, "dot");
     let mut sum = builder.zero();
     for (&coefficient, &input) in coefficients.iter().zip(input) {
         let coefficient = to_field(coefficient);
         sum = builder.mul_const_add(coefficient, input, sum);
     }
-    builder.pop_context();
+    // builder.pop_context();
     sum
 }
 
@@ -78,26 +93,23 @@ fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Ta
 
 pub async fn main(mut rng: Rng, options: Options) -> EyreResult<()> {
     let config = CircuitConfig {
-        // num_wires: 300, // 30s, 317785B
-        // num_wires: 400, // 34s, 348272B
-        num_wires: 450, // 18s, 349340B, 12
-        // num_wires: 500, // 20s, 359772B
-        // num_wires: 600, // 23s, 382665B
-        // num_wires: 1000, // 34s,  478825B
-        num_routed_wires: 400,
-        constant_gate_size: 10,
+        num_wires: options.num_wires,
+        num_routed_wires: options.num_routed_wires,
+        constant_gate_size: options.constant_gate_size,
         ..CircuitConfig::default()
     };
     let mut builder = CircuitBuilder::<F, D>::new(config);
 
     let input_size = options.input_size;
     let output_size = options.output_size;
-    info!("Computing proof for {input_size}x{output_size} matrix multiplication");
+    info!("Computing proof for {input_size}x{output_size} matrix-vector multiplication");
+
+    let quantize_coeff = |c: i32| c % (1 << options.coefficient_bits);
 
     // Coefficients
-    let coefficients: Vec<i32> = (0..input_size * output_size).map(|_| rng.gen()).collect();
+    let coefficients: Vec<i32> = (0..input_size * output_size).map(|_| quantize_coeff(rng.gen())).collect();
 
-    /// Circuit
+    // Circuit
     // Inputs
     builder.push_context(Level::Info, "Inputs");
     let inputs = builder.add_virtual_targets(input_size);
@@ -117,7 +129,7 @@ pub async fn main(mut rng: Rng, options: Options) -> EyreResult<()> {
     info!("Building circuit");
     let data = builder.build::<C>();
 
-    /// Proof
+    // Proof
 
     // Set witness for proof
     info!("Proving");
@@ -128,14 +140,13 @@ pub async fn main(mut rng: Rng, options: Options) -> EyreResult<()> {
         pw.set_target(target, value);
     }
     let proof = data.prove(pw).unwrap();
-    dbg!(proof.public_inputs.len());
     let compressed = proof.clone().compress(&data.common).unwrap();
-    let bytes = compressed.to_bytes().unwrap();
-    dbg!(bytes.len());
+    let proof_size = ByteSize(compressed.to_bytes().unwrap().len() as u64);
+    info!("Proof size: {proof_size}");
 
     // Verifying
     info!("Verifying");
-    data.verify(proof);
+    data.verify(proof).unwrap();
 
     Ok(())
 }

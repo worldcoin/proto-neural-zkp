@@ -6,11 +6,15 @@ use neural_zkp as lib;
 
 mod allocator;
 mod logging;
+mod random;
 
 use self::allocator::Allocator;
 use eyre::{Result as EyreResult, WrapErr as _};
 use structopt::StructOpt;
-use tokio::{runtime, sync::broadcast};
+use tokio::{
+    runtime::{self, Runtime},
+    sync::broadcast,
+};
 use tracing::info;
 
 const VERSION: &str = concat!(
@@ -46,6 +50,13 @@ struct Options {
 
     #[structopt(flatten)]
     app: lib::Options,
+
+    #[structopt(flatten)]
+    random: random::Options,
+
+    /// Number of compute threads to use (defaults to number of cores)
+    #[structopt(long)]
+    threads: Option<usize>,
 }
 
 fn main() -> EyreResult<()> {
@@ -56,19 +67,41 @@ fn main() -> EyreResult<()> {
     let matches = Options::clap().long_version(VERSION).get_matches();
     let options = Options::from_clap(&matches);
 
-    // Start log system
+    // Start subsystems
     options.log.init()?;
+    let rng = options.random.init();
+    init_rayon(options.threads)?;
+    let runtime = init_tokio()?;
 
-    // Launch Tokio runtime
-    runtime::Builder::new_multi_thread()
-        .enable_all()
-        .build()
-        .wrap_err("Error creating Tokio runtime")?
-        .block_on(lib::main(options.app))?;
+    // Run main
+    let main_future = lib::main(rng, options.app);
+    runtime.block_on(main_future)?;
 
     // Terminate successfully
     info!("Program terminating normally");
     Ok(())
+}
+
+fn init_rayon(threads: Option<usize>) -> EyreResult<()> {
+    if let Some(threads) = threads {
+        rayon::ThreadPoolBuilder::new()
+            .num_threads(threads)
+            .build_global()
+            .context("Failed to build thread pool.")?;
+    }
+    info!(
+        "Using {} compute threads on {} cores",
+        rayon::current_num_threads(),
+        num_cpus::get()
+    );
+    Ok(())
+}
+
+fn init_tokio() -> EyreResult<Runtime> {
+    runtime::Builder::new_multi_thread()
+        .enable_all()
+        .build()
+        .wrap_err("Error creating Tokio runtime")
 }
 
 #[cfg(test)]

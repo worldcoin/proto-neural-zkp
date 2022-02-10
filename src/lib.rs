@@ -1,9 +1,7 @@
 use eyre::Result as EyreResult;
 use log::Level;
 use plonky2::{
-    field::{field_types::Field, goldilocks_field::GoldilocksField},
-    gadgets::arithmetic_u32::U32Target,
-    gates::arithmetic_u32::U32ArithmeticGate,
+    field::field_types::Field,
     iop::{
         target::Target,
         witness::{PartialWitness, Witness},
@@ -14,14 +12,22 @@ use plonky2::{
         config::{GenericConfig, KeccakGoldilocksConfig, PoseidonGoldilocksConfig},
     },
 };
-use rand::prelude::*;
-use std::sync::Arc;
+use rand::Rng as _;
 use structopt::StructOpt;
-use tokio::sync::broadcast;
 use tracing::{info, trace};
 
+type Rng = rand_pcg::Mcg128Xsl64;
+
 #[derive(Clone, Debug, PartialEq, StructOpt)]
-pub struct Options {}
+pub struct Options {
+    /// The size of the input layer
+    #[structopt(long, default_value = "5000")]
+    pub input_size: usize,
+
+    /// The size of the output layer
+    #[structopt(long, default_value = "5000")]
+    pub output_size: usize,
+}
 
 const D: usize = 2;
 type C = PoseidonGoldilocksConfig;
@@ -70,7 +76,7 @@ fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Ta
     output
 }
 
-pub async fn main(options: Options) -> EyreResult<()> {
+pub async fn main(mut rng: Rng, options: Options) -> EyreResult<()> {
     let config = CircuitConfig {
         // num_wires: 300, // 30s, 317785B
         // num_wires: 400, // 34s, 348272B
@@ -84,18 +90,12 @@ pub async fn main(options: Options) -> EyreResult<()> {
     };
     let mut builder = CircuitBuilder::<F, D>::new(config);
 
-    let input_size = 14688;
-    // let output_size = 100;  // 18s, 349340B, 12
-    // let output_size = 200; // 40s
-    // let output_size = 400; // 86.4806s
-    // let output_size = 800; // 259.6348s, 380660B
-    // let output_size = 1000; //
-    // let output_size = 1600; //  (crash)
-
-    let output_size = 1600; // 44s
+    let input_size = options.input_size;
+    let output_size = options.output_size;
+    info!("Computing proof for {input_size}x{output_size} matrix multiplication");
 
     // Coefficients
-    let coefficients: Vec<i32> = (0..input_size * output_size).map(|_| random()).collect();
+    let coefficients: Vec<i32> = (0..input_size * output_size).map(|_| rng.gen()).collect();
 
     /// Circuit
     // Inputs
@@ -121,7 +121,7 @@ pub async fn main(options: Options) -> EyreResult<()> {
 
     // Set witness for proof
     info!("Proving");
-    let input_values = (0..input_size as i32).into_iter().map(|_| random());
+    let input_values = (0..input_size as i32).into_iter().map(|_| rng.gen());
     let mut pw = PartialWitness::new();
     for (&target, value) in inputs.iter().zip(input_values) {
         let value = F::from_canonical_u32(value);

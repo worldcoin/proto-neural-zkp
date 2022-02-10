@@ -5,8 +5,13 @@ use eyre::{bail, Error as EyreError, Result as EyreResult, WrapErr as _};
 use std::process::id as pid;
 use structopt::StructOpt;
 use tracing::{info, Level, Subscriber};
-use tracing_log::LogTracer;
-use tracing_subscriber::{filter::Targets, fmt, layer::SubscriberExt, Layer, Registry};
+use tracing_log::{AsLog as _, LogTracer};
+use tracing_subscriber::{
+    filter::{LevelFilter, Targets},
+    fmt::{self, time::Uptime},
+    layer::SubscriberExt,
+    Layer, Registry,
+};
 
 #[derive(Debug, PartialEq)]
 enum LogFormat {
@@ -21,8 +26,10 @@ impl LogFormat {
         S: Subscriber + for<'a> tracing_subscriber::registry::LookupSpan<'a> + Send + Sync,
     {
         match self {
-            LogFormat::Compact => Box::new(fmt::Layer::new().event_format(fmt::format().compact()))
-                as Box<dyn Layer<S> + Send + Sync>,
+            LogFormat::Compact => Box::new(
+                fmt::Layer::new()
+                    .event_format(fmt::format().with_timer(Uptime::default()).compact()),
+            ) as Box<dyn Layer<S> + Send + Sync>,
             LogFormat::Pretty => Box::new(fmt::Layer::new().event_format(fmt::format().pretty())),
             LogFormat::Json => Box::new(fmt::Layer::new().event_format(fmt::format().json())),
         }
@@ -81,14 +88,17 @@ impl Options {
                 .parse()
                 .wrap_err("Error parsing log-filter")?
         };
-        let targets = log_filter.with_targets(verbosity);
+        // FIXME: The log-filter can not overwrite the global log level.
+        let targets = verbosity.with_targets(log_filter);
 
         // Route events to stdout
         let subscriber = Registry::default().with(self.log_format.to_layer().with_filter(targets));
         tracing::subscriber::set_global_default(subscriber)?;
 
-        // Enable `log` crate compatibility
-        LogTracer::init()?;
+        // Enable `log` crate compatibility with max level hint
+        LogTracer::builder()
+            .with_max_level(LevelFilter::current().as_log())
+            .init()?;
 
         // Log version information
         info!(

@@ -1,12 +1,11 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
+// Stabilized soon: https://github.com/rust-lang/rust/pull/93827
+#![feature(const_fn_trait_bound)]
 
 use neural_zkp as lib;
 
 mod allocator;
 mod logging;
-mod prometheus;
-mod shutdown;
-mod tokio_console;
 
 use self::allocator::Allocator;
 use eyre::{Result as EyreResult, WrapErr as _};
@@ -43,11 +42,10 @@ pub static ALLOCATOR: Allocator<allocator::MiMalloc> = allocator::new_mimalloc()
 #[derive(StructOpt)]
 struct Options {
     #[structopt(flatten)]
-    log:            logging::Options,
+    log: logging::Options,
+
     #[structopt(flatten)]
-    pub prometheus: prometheus::Options,
-    #[structopt(flatten)]
-    app:            lib::Options,
+    app: lib::Options,
 }
 
 fn main() -> EyreResult<()> {
@@ -58,9 +56,6 @@ fn main() -> EyreResult<()> {
     let matches = Options::clap().long_version(VERSION).get_matches();
     let options = Options::from_clap(&matches);
 
-    // Meter memory consumption
-    ALLOCATOR.start_metering();
-
     // Start log system
     options.log.init()?;
 
@@ -69,31 +64,7 @@ fn main() -> EyreResult<()> {
         .enable_all()
         .build()
         .wrap_err("Error creating Tokio runtime")?
-        .block_on(async {
-            // Create shutdown signal
-            // TODO: Fix minor race conditions
-            let (shutdown, _) = broadcast::channel(1);
-            tokio::spawn({
-                let shutdown = shutdown.clone();
-                async move {
-                    shutdown::signal_shutdown().await.unwrap();
-                    let _ = shutdown.send(());
-                }
-            });
-
-            // Start prometheus
-            let prometheus = tokio::spawn(prometheus::main(options.prometheus, shutdown.clone()));
-
-            // Start main
-            lib::main(options.app, shutdown.clone()).await?;
-
-            // Send (potentially redundant) shutdown in case `lib::main` returned by itself
-            let _ = shutdown.send(());
-
-            // Stop prometheus
-            info!("Stopping metrics server");
-            prometheus.await?
-        })?;
+        .block_on(lib::main(options.app))?;
 
     // Terminate successfully
     info!("Program terminating normally");

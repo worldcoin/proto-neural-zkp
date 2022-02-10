@@ -1,76 +1,56 @@
-use core::sync::atomic::{AtomicBool, Ordering};
-use once_cell::sync::Lazy;
-use prometheus::{
-    exponential_buckets, register_histogram, register_int_counter, Histogram, IntCounter,
-};
-use std::alloc::{GlobalAlloc, Layout};
-
+use core::sync::atomic::{AtomicUsize, Ordering::Relaxed};
 pub use std::alloc::System as StdAlloc;
+use std::alloc::{GlobalAlloc, Layout};
 
 #[cfg(feature = "mimalloc")]
 pub use mimalloc::MiMalloc;
-
-static ALLOCATED: Lazy<IntCounter> =
-    Lazy::new(|| register_int_counter!("mem_alloc", "Cumulative memory allocated.").unwrap());
-static FREED: Lazy<IntCounter> =
-    Lazy::new(|| register_int_counter!("mem_free", "Cumulative memory freed.").unwrap());
-static SIZE: Lazy<Histogram> = Lazy::new(|| {
-    register_histogram!(
-        "mem_alloc_size",
-        "Distribution of allocation sizes.",
-        exponential_buckets(16.0, 4.0, 10).unwrap()
-    )
-    .unwrap()
-});
-
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct Allocator<T: GlobalAlloc> {
-    inner:    T,
-    metering: AtomicBool,
+    inner:             T,
+    allocated:         AtomicUsize,
+    peak_allocated:    AtomicUsize,
+    total_allocated:   AtomicUsize,
+    largest_allocated: AtomicUsize,
+    num_allocations:   AtomicUsize,
 }
 
 #[cfg(not(feature = "mimalloc"))]
 // TODO: Turn this into a generic constructor taking an `inner: T` once
 // #![feature(const_fn_trait_bound)] is stable.
 pub const fn new_std() -> Allocator<StdAlloc> {
-    Allocator {
-        inner:    StdAlloc,
-        metering: AtomicBool::new(false),
-    }
+    Allocator::new(StdAlloc)
 }
 
 #[cfg(feature = "mimalloc")]
 pub const fn new_mimalloc() -> Allocator<MiMalloc> {
-    Allocator {
-        inner:    MiMalloc,
-        metering: AtomicBool::new(false),
-    }
+    Allocator::new(MiMalloc)
 }
 
 impl<T: GlobalAlloc> Allocator<T> {
-    pub fn start_metering(&self) {
-        if self.metering.load(Ordering::Acquire) {
-            return;
+    pub const fn new(alloc: T) -> Allocator<T> {
+        Allocator {
+            inner:             alloc,
+            allocated:         AtomicUsize::new(0),
+            peak_allocated:    AtomicUsize::new(0),
+            total_allocated:   AtomicUsize::new(0),
+            largest_allocated: AtomicUsize::new(0),
+            num_allocations:   AtomicUsize::new(0),
         }
-        Lazy::force(&ALLOCATED);
-        Lazy::force(&SIZE);
-        Lazy::force(&FREED);
-        self.metering.store(true, Ordering::Release);
     }
 
     fn count_alloc(&self, size: usize) {
-        // Avoid re-entrancy here when metrics are first initialized.
-        if self.metering.load(Ordering::Acquire) {
-            ALLOCATED.inc_by(size as u64);
-            #[allow(clippy::cast_precision_loss)]
-            SIZE.observe(size as f64);
-        }
+        // TODO: We are doing a lot of atomic operations here, what is
+        // the performance impact?
+        let allocated = self.allocated.fetch_add(size, Relaxed);
+        self.total_allocated.fetch_add(size, Relaxed);
+        self.num_allocations.fetch_add(1, Relaxed);
+        // HACK: Using `allocated` here again is not completely fool proof
+        self.peak_allocated.fetch_max(allocated, Relaxed);
+        self.largest_allocated.fetch_max(size, Relaxed);
     }
 
     fn count_dealloc(&self, size: usize) {
-        if self.metering.load(Ordering::Acquire) {
-            FREED.inc_by(size as u64);
-        }
+        self.allocated.fetch_sub(size, Relaxed);
     }
 }
 

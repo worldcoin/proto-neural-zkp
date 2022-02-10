@@ -1,6 +1,5 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 
-use super::tokio_console;
 use core::str::FromStr;
 use eyre::{bail, Error as EyreError, Result as EyreResult, WrapErr as _};
 use std::process::id as pid;
@@ -8,7 +7,6 @@ use structopt::StructOpt;
 use tracing::{info, Level, Subscriber};
 use tracing_log::LogTracer;
 use tracing_subscriber::{filter::Targets, fmt, layer::SubscriberExt, Layer, Registry};
-use users::{get_current_gid, get_current_uid};
 
 #[derive(Debug, PartialEq)]
 enum LogFormat {
@@ -55,11 +53,8 @@ pub struct Options {
     log_filter: String,
 
     /// Log format, one of 'compact', 'pretty' or 'json'
-    #[structopt(long, env, default_value = "pretty")]
+    #[structopt(long, env, default_value = "compact")]
     log_format: LogFormat,
-
-    #[structopt(flatten)]
-    pub tokio_console: tokio_console::Options,
 }
 
 impl Options {
@@ -88,13 +83,8 @@ impl Options {
         };
         let targets = log_filter.with_targets(verbosity);
 
-        // Support server for tokio-console
-        let console_layer = tokio_console::layer(&self.tokio_console);
-
-        // Route events to both tokio-console and stdout
-        let subscriber = Registry::default()
-            .with(console_layer)
-            .with(self.log_format.to_layer().with_filter(targets));
+        // Route events to stdout
+        let subscriber = Registry::default().with(self.log_format.to_layer().with_filter(targets));
         tracing::subscriber::set_global_default(subscriber)?;
 
         // Enable `log` crate compatibility
@@ -104,8 +94,6 @@ impl Options {
         info!(
             host = env!("TARGET"),
             pid = pid(),
-            uid = get_current_uid(),
-            gid = get_current_gid(),
             main = &crate::main as *const _ as usize,
             commit = &env!("COMMIT_SHA")[..8],
             "{name} {version}",
@@ -127,12 +115,9 @@ pub mod test {
         let cmd = "arg0 -v --log-filter foo -vvv";
         let options = Options::from_iter_safe(cmd.split(' ')).unwrap();
         assert_eq!(options, Options {
-            verbose:       4,
-            log_filter:    "foo".to_owned(),
-            log_format:    LogFormat::Pretty,
-            tokio_console: tokio_console::Options {
-                tokio_console: false,
-            },
+            verbose:    4,
+            log_filter: "foo".to_owned(),
+            log_format: LogFormat::Pretty,
         });
     }
 }

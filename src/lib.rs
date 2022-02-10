@@ -70,7 +70,7 @@ fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Ta
     output
 }
 
-pub async fn main(options: Options, shutdown: broadcast::Sender<()>) -> EyreResult<()> {
+pub async fn main(options: Options) -> EyreResult<()> {
     let config = CircuitConfig {
         // num_wires: 300, // 30s, 317785B
         // num_wires: 400, // 34s, 348272B

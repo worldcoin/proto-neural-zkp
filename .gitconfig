@@ -1,0 +1,5 @@
+# git config --local include.path ../.gitconfig
+
+[filter "jupyternotebook"]
+    # clean = jupyter nbconvert --ClearOutputPreprocessor.enabled=True --inplace %f
+    # required

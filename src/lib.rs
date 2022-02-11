@@ -1,4 +1,13 @@
-use eyre::Result as EyreResult;
+#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
+// Stabilized soon: https://github.com/rust-lang/rust/pull/93827
+#![feature(const_fn_trait_bound)]
+
+mod allocator;
+mod anyhow;
+
+use self::{allocator::Allocator, anyhow::MapAny as _};
+use bytesize::ByteSize;
+use eyre::{eyre, Result as EyreResult};
 use log::Level;
 use plonky2::{
     field::field_types::Field,
@@ -8,19 +17,32 @@ use plonky2::{
     },
     plonk::{
         circuit_builder::CircuitBuilder,
-        circuit_data::CircuitConfig,
+        circuit_data::{CircuitConfig, CircuitData},
         config::{GenericConfig, KeccakGoldilocksConfig, PoseidonGoldilocksConfig},
+        proof::CompressedProofWithPublicInputs,
     },
 };
 use rand::Rng as _;
+use std::{iter::once, sync::atomic::Ordering, time::Instant};
 use structopt::StructOpt;
 use tracing::{info, trace};
-use bytesize::ByteSize;
 
 type Rng = rand_pcg::Mcg128Xsl64;
 
+#[cfg(not(feature = "mimalloc"))]
+#[global_allocator]
+pub static ALLOCATOR: Allocator<allocator::StdAlloc> = allocator::new_std();
+
+#[cfg(feature = "mimalloc")]
+#[global_allocator]
+pub static ALLOCATOR: Allocator<allocator::MiMalloc> = allocator::new_mimalloc();
+
 #[derive(Clone, Debug, PartialEq, StructOpt)]
 pub struct Options {
+    /// Bench over increasing output sizes
+    #[structopt(long)]
+    pub bench: bool,
+
     /// The size of the input layer
     #[structopt(long, default_value = "1000")]
     pub input_size: usize,
@@ -51,6 +73,7 @@ type C = PoseidonGoldilocksConfig;
 // type C = KeccakGoldilocksConfig;
 type F = <C as GenericConfig<D>>::F;
 type Builder = CircuitBuilder<F, D>;
+type Proof = CompressedProofWithPublicInputs<F, C, D>;
 
 // https://arxiv.org/pdf/1509.09308.pdf
 // https://en.wikipedia.org/wiki/Freivalds%27_algorithm ?
@@ -91,62 +114,130 @@ fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Ta
     output
 }
 
-pub async fn main(mut rng: Rng, options: Options) -> EyreResult<()> {
-    let config = CircuitConfig {
-        num_wires: options.num_wires,
-        num_routed_wires: options.num_routed_wires,
-        constant_gate_size: options.constant_gate_size,
-        ..CircuitConfig::default()
-    };
-    let mut builder = CircuitBuilder::<F, D>::new(config);
+struct Circuit {
+    inputs:  Vec<Target>,
+    outputs: Vec<Target>,
+    data:    CircuitData<F, C, D>,
+}
 
-    let input_size = options.input_size;
-    let output_size = options.output_size;
-    info!("Computing proof for {input_size}x{output_size} matrix-vector multiplication");
+impl Circuit {
+    fn build(options: &Options, coefficients: &[i32]) -> Circuit {
+        assert_eq!(coefficients.len(), options.input_size * options.output_size);
+        info!(
+            "Building circuit for for {}x{} matrix-vector multiplication",
+            options.input_size, options.output_size
+        );
 
-    let quantize_coeff = |c: i32| c % (1 << options.coefficient_bits);
+        let config = CircuitConfig {
+            num_wires: options.num_wires,
+            num_routed_wires: options.num_routed_wires,
+            constant_gate_size: options.constant_gate_size,
+            ..CircuitConfig::default()
+        };
+        let mut builder = CircuitBuilder::<F, D>::new(config);
 
-    // Coefficients
-    let coefficients: Vec<i32> = (0..input_size * output_size).map(|_| quantize_coeff(rng.gen())).collect();
+        // Inputs
+        builder.push_context(Level::Info, "Inputs");
+        let inputs = builder.add_virtual_targets(options.input_size);
+        inputs
+            .iter()
+            .for_each(|target| builder.register_public_input(*target));
+        builder.pop_context();
 
-    // Circuit
-    // Inputs
-    builder.push_context(Level::Info, "Inputs");
-    let inputs = builder.add_virtual_targets(input_size);
-    inputs
-        .iter()
-        .for_each(|target| builder.register_public_input(*target));
-    builder.pop_context();
+        // Circuit
+        let outputs = full(&mut builder, &coefficients, &inputs);
+        outputs
+            .iter()
+            .for_each(|target| builder.register_public_input(*target));
 
-    // Circuit
-    let output = full(&mut builder, &coefficients, &inputs);
-    output
-        .iter()
-        .for_each(|target| builder.register_public_input(*target));
+        // Log circuit size
+        builder.print_gate_counts(0);
+        let data = builder.build::<C>();
 
-    // Log circuit size
-    builder.print_gate_counts(0);
-    info!("Building circuit");
-    let data = builder.build::<C>();
-
-    // Proof
-
-    // Set witness for proof
-    info!("Proving");
-    let input_values = (0..input_size as i32).into_iter().map(|_| rng.gen());
-    let mut pw = PartialWitness::new();
-    for (&target, value) in inputs.iter().zip(input_values) {
-        let value = F::from_canonical_u32(value);
-        pw.set_target(target, value);
+        Self {
+            inputs,
+            outputs,
+            data,
+        }
     }
-    let proof = data.prove(pw).unwrap();
-    let compressed = proof.clone().compress(&data.common).unwrap();
-    let proof_size = ByteSize(compressed.to_bytes().unwrap().len() as u64);
-    info!("Proof size: {proof_size}");
 
-    // Verifying
-    info!("Verifying");
-    data.verify(proof).unwrap();
+    fn prove(&self, input: &[i32]) -> EyreResult<Proof> {
+        info!("Proving {} size input", input.len());
+        let mut pw = PartialWitness::new();
+        for (&target, &value) in self.inputs.iter().zip(input) {
+            pw.set_target(target, to_field(value));
+        }
+        let proof = self.data.prove(pw).map_any()?;
+        let compressed = proof.clone().compress(&self.data.common).map_any()?;
+        let proof_size = ByteSize(compressed.to_bytes().map_any()?.len() as u64);
+        info!("Proof size: {proof_size}");
+        Ok(compressed)
+    }
+
+    fn verify(&self, proof: &Proof) -> EyreResult<()> {
+        info!(
+            "Verifying proof with {} public inputs",
+            proof.public_inputs.len()
+        );
+        self.data.verify_compressed(proof.clone()).map_any()
+    }
+}
+
+pub async fn main(mut rng: Rng, mut options: Options) -> EyreResult<()> {
+    info!(
+        "Computing proof for {}x{} matrix-vector multiplication",
+        options.input_size, options.output_size
+    );
+
+    println!(
+        "input_size,output_size,build_time_s,proof_time_s,proof_mem_b,proof_size_b,verify_time_s"
+    );
+    let output_sizes: Box<dyn Iterator<Item = usize>> = if options.bench {
+        Box::new((1..).map(|n| n * 1000))
+    } else {
+        Box::new(once(options.output_size))
+    };
+    for output_size in output_sizes {
+        options.output_size = output_size;
+
+        // Coefficients
+        let quantize_coeff = |c: i32| c % (1 << options.coefficient_bits);
+        let coefficients: Vec<i32> = (0..options.input_size * options.output_size)
+            .map(|_| quantize_coeff(rng.gen()))
+            .collect();
+        let now = Instant::now();
+        let circuit = Circuit::build(&options, &coefficients);
+        let circuit_build_time = now.elapsed();
+
+        // Set witness for proof
+        ALLOCATOR.peak_allocated.store(0, Ordering::Release);
+        let input_values = (0..options.input_size as i32)
+            .into_iter()
+            .map(|_| rng.gen())
+            .collect::<Vec<_>>();
+        let now = Instant::now();
+        let proof = circuit.prove(&input_values)?;
+        let proof_mem = ALLOCATOR.peak_allocated.load(Ordering::Acquire);
+        let proof_time = now.elapsed();
+        let proof_size = proof.to_bytes().map_any()?.len() as u64;
+        info!("Prover memory usage: {}", ByteSize(proof_mem as u64));
+
+        // Verifying
+        let now = Instant::now();
+        circuit.verify(&proof)?;
+        let verify_time = now.elapsed();
+
+        println!(
+            "{},{},{},{},{},{},{}",
+            options.input_size,
+            options.output_size,
+            circuit_build_time.as_secs_f64(),
+            proof_time.as_secs_f64(),
+            proof_mem,
+            proof_size,
+            verify_time.as_secs_f64()
+        );
+    }
 
     Ok(())
 }

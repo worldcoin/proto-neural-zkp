@@ -4,14 +4,15 @@ use std::alloc::{GlobalAlloc, Layout};
 
 #[cfg(feature = "mimalloc")]
 pub use mimalloc::MiMalloc;
+
 #[cfg_attr(feature = "std", derive(Debug))]
 pub struct Allocator<T: GlobalAlloc> {
-    inner:             T,
-    allocated:         AtomicUsize,
-    peak_allocated:    AtomicUsize,
-    total_allocated:   AtomicUsize,
-    largest_allocated: AtomicUsize,
-    num_allocations:   AtomicUsize,
+    inner:                 T,
+    pub allocated:         AtomicUsize,
+    pub peak_allocated:    AtomicUsize,
+    pub total_allocated:   AtomicUsize,
+    pub largest_allocated: AtomicUsize,
+    pub num_allocations:   AtomicUsize,
 }
 
 #[cfg(not(feature = "mimalloc"))]
@@ -27,8 +28,8 @@ pub const fn new_mimalloc() -> Allocator<MiMalloc> {
 }
 
 impl<T: GlobalAlloc> Allocator<T> {
-    pub const fn new(alloc: T) -> Allocator<T> {
-        Allocator {
+    pub const fn new(alloc: T) -> Self {
+        Self {
             inner:             alloc,
             allocated:         AtomicUsize::new(0),
             peak_allocated:    AtomicUsize::new(0),

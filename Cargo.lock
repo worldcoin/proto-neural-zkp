@@ -695,6 +695,7 @@ dependencies = [
 name = "neural-zkp"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "bytesize",
  "color-eyre",
  "criterion",

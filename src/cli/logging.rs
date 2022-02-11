@@ -25,13 +25,14 @@ impl LogFormat {
     where
         S: Subscriber + for<'a> tracing_subscriber::registry::LookupSpan<'a> + Send + Sync,
     {
+        let layer = fmt::Layer::new().with_writer(std::io::stderr);
         match self {
-            LogFormat::Compact => Box::new(
-                fmt::Layer::new()
-                    .event_format(fmt::format().with_timer(Uptime::default()).compact()),
-            ) as Box<dyn Layer<S> + Send + Sync>,
-            LogFormat::Pretty => Box::new(fmt::Layer::new().event_format(fmt::format().pretty())),
-            LogFormat::Json => Box::new(fmt::Layer::new().event_format(fmt::format().json())),
+            LogFormat::Compact => {
+                Box::new(layer.event_format(fmt::format().with_timer(Uptime::default()).compact()))
+                    as Box<dyn Layer<S> + Send + Sync>
+            }
+            LogFormat::Pretty => Box::new(layer.event_format(fmt::format().pretty())),
+            LogFormat::Json => Box::new(layer.event_format(fmt::format().json())),
         }
     }
 }
@@ -91,7 +92,7 @@ impl Options {
         // FIXME: The log-filter can not overwrite the global log level.
         let targets = verbosity.with_targets(log_filter);
 
-        // Route events to stdout
+        // Route events to stderr
         let subscriber = Registry::default().with(self.log_format.to_layer().with_filter(targets));
         tracing::subscriber::set_global_default(subscriber)?;
 
@@ -127,7 +128,7 @@ pub mod test {
         assert_eq!(options, Options {
             verbose:    4,
             log_filter: "foo".to_owned(),
-            log_format: LogFormat::Pretty,
+            log_format: LogFormat::Compact,
         });
     }
 }

@@ -1,20 +1,13 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
-// Stabilized soon: https://github.com/rust-lang/rust/pull/93827
-#![feature(const_fn_trait_bound)]
 
 use neural_zkp as lib;
 
-mod allocator;
 mod logging;
 mod random;
 
-use self::allocator::Allocator;
 use eyre::{Result as EyreResult, WrapErr as _};
 use structopt::StructOpt;
-use tokio::{
-    runtime::{self, Runtime},
-    sync::broadcast,
-};
+use tokio::runtime::{self, Runtime};
 use tracing::info;
 
 const VERSION: &str = concat!(
@@ -34,14 +27,6 @@ const VERSION: &str = concat!(
     "\n",
     env!("CARGO_PKG_DESCRIPTION"),
 );
-
-#[cfg(not(feature = "mimalloc"))]
-#[global_allocator]
-pub static ALLOCATOR: Allocator<allocator::StdAlloc> = allocator::new_std();
-
-#[cfg(feature = "mimalloc")]
-#[global_allocator]
-pub static ALLOCATOR: Allocator<allocator::MiMalloc> = allocator::new_mimalloc();
 
 #[derive(StructOpt)]
 struct Options {

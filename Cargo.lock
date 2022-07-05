@@ -42,12 +42,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "94a45b455c14666b85fc40a019e8ab9eb75e3a124e05494f5397122bc9eb06e0"
 
 [[package]]
-name = "array_tool"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f8cb5d814eb646a863c4f24978cff2880c4be96ad8cde2c0f0678732902e271"
-
-[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -373,12 +367,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "fs_extra"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2022715d62ab30faffd124d40b76f4134a550a87792276512b18d63272333394"
-
-[[package]]
 name = "futures"
 version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -555,27 +543,6 @@ name = "itoa"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aab8fc367588b89dcee83ab0fd66b72b50b72fa1904d7095045ace2b0c81c35"
-
-[[package]]
-name = "jemalloc-sys"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d3b9f3f5c9b31aa0f5ed3260385ac205db665baa41d49bb8338008ae94ede45"
-dependencies = [
- "cc",
- "fs_extra",
- "libc",
-]
-
-[[package]]
-name = "jemallocator"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43ae63fcfc45e99ab3d1b29a46782ad679e98436c3169d15a167a1108a724b69"
-dependencies = [
- "jemalloc-sys",
- "libc",
-]
 
 [[package]]
 name = "js-sys"
@@ -903,13 +870,10 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 [[package]]
 name = "plonky2"
 version = "0.1.0"
-source = "git+https://github.com/recmo/plonky2?branch=recmo/hacks#95ad1ddcf79cbd3f2f4a804e9cc3415ff609a597"
 dependencies = [
  "anyhow",
- "array_tool",
  "env_logger",
  "itertools",
- "jemallocator",
  "keccak-hash",
  "log",
  "num",
@@ -927,7 +891,6 @@ dependencies = [
 [[package]]
 name = "plonky2_field"
 version = "0.1.0"
-source = "git+https://github.com/recmo/plonky2?branch=recmo/hacks#95ad1ddcf79cbd3f2f4a804e9cc3415ff609a597"
 dependencies = [
  "anyhow",
  "itertools",
@@ -935,13 +898,13 @@ dependencies = [
  "plonky2_util",
  "rand",
  "serde",
+ "static_assertions",
  "unroll",
 ]
 
 [[package]]
 name = "plonky2_util"
 version = "0.1.0"
-source = "git+https://github.com/recmo/plonky2?branch=recmo/hacks#95ad1ddcf79cbd3f2f4a804e9cc3415ff609a597"
 
 [[package]]
 name = "plotters"

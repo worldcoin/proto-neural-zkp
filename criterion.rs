@@ -1,4 +1,4 @@
-use neural_zkp as lib;
+use semaphore as lib;
 
 fn main() {
     let mut criterion = criterion::Criterion::default().configure_from_args();

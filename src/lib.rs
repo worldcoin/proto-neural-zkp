@@ -26,6 +26,7 @@ use rand::Rng as _;
 use std::{iter::once, sync::atomic::Ordering, time::Instant};
 use structopt::StructOpt;
 use tracing::{info, trace};
+use plonky2::plonk::proof::ProofWithPublicInputs;
 
 type Rng = rand_pcg::Mcg128Xsl64;
 
@@ -73,7 +74,7 @@ type C = PoseidonGoldilocksConfig;
 // type C = KeccakGoldilocksConfig;
 type F = <C as GenericConfig<D>>::F;
 type Builder = CircuitBuilder<F, D>;
-type Proof = CompressedProofWithPublicInputs<F, C, D>;
+type Proof = ProofWithPublicInputs<F, C, D>;
 
 // https://arxiv.org/pdf/1509.09308.pdf
 // https://en.wikipedia.org/wiki/Freivalds%27_algorithm ?
@@ -99,6 +100,7 @@ fn dot(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Target 
     // builder.pop_context();
     sum
 }
+
 
 fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Target> {
     let input_size = input.len();
@@ -131,7 +133,7 @@ impl Circuit {
         let config = CircuitConfig {
             num_wires: options.num_wires,
             num_routed_wires: options.num_routed_wires,
-            constant_gate_size: options.constant_gate_size,
+            // constant_gate_size: options.constant_gate_size,
             ..CircuitConfig::default()
         };
         let mut builder = CircuitBuilder::<F, D>::new(config);
@@ -168,10 +170,10 @@ impl Circuit {
             pw.set_target(target, to_field(value));
         }
         let proof = self.data.prove(pw).map_any()?;
-        let compressed = proof.clone().compress(&self.data.common).map_any()?;
-        let proof_size = ByteSize(compressed.to_bytes().map_any()?.len() as u64);
+        // let compressed = proof.clone().compress(&self.data.common).map_any()?;
+        let proof_size = ByteSize(proof.to_bytes().map_any()?.len() as u64);
         info!("Proof size: {proof_size}");
-        Ok(compressed)
+        Ok(proof)
     }
 
     fn verify(&self, proof: &Proof) -> EyreResult<()> {
@@ -179,7 +181,7 @@ impl Circuit {
             "Verifying proof with {} public inputs",
             proof.public_inputs.len()
         );
-        self.data.verify_compressed(proof.clone()).map_any()
+        self.data.verify(proof.clone()).map_any()
     }
 }
 

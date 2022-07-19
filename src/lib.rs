@@ -1,6 +1,4 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
-// Stabilized soon: https://github.com/rust-lang/rust/pull/93827
-#![feature(const_fn_trait_bound)]
 
 mod allocator;
 mod anyhow;

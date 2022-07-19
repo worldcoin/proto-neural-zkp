@@ -1,5 +1,5 @@
 # git config --local include.path ../.gitconfig
 
-[filter "jupyternotebook"]
-    clean = jupyter nbconvert --clear-output %f
-    required
+# [filter "jupyternotebook"]
+#     clean = jupyter nbconvert --clear-output %f
+#     required

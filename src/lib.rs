@@ -10,7 +10,7 @@ use bytesize::ByteSize;
 use eyre::{eyre, Result as EyreResult};
 use log::Level;
 use plonky2::{
-    field::field_types::Field,
+    field::types::Field,
     iop::{
         target::Target,
         witness::{PartialWitness, Witness},
@@ -19,14 +19,13 @@ use plonky2::{
         circuit_builder::CircuitBuilder,
         circuit_data::{CircuitConfig, CircuitData},
         config::{GenericConfig, KeccakGoldilocksConfig, PoseidonGoldilocksConfig},
-        proof::CompressedProofWithPublicInputs,
+        proof::{CompressedProofWithPublicInputs, ProofWithPublicInputs},
     },
 };
 use rand::Rng as _;
 use std::{iter::once, sync::atomic::Ordering, time::Instant};
 use structopt::StructOpt;
 use tracing::{info, trace};
-use plonky2::plonk::proof::ProofWithPublicInputs;
 
 type Rng = rand_pcg::Mcg128Xsl64;
 
@@ -100,7 +99,6 @@ fn dot(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Target 
     // builder.pop_context();
     sum
 }
-
 
 fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Target> {
     let input_size = input.len();

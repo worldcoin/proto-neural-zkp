@@ -46,6 +46,10 @@ tracing-log = "0.1.2"
 tracing-subscriber = { version = "0.3", features = [ "env-filter", "json" ] }
 tracing-test = "0.2"
 log = "0.4.14"
+ndarray = "0.15.4"
+ndarray-linalg = "0.14.1"
+ndarray-rand = "0.14.0"
+rand_isaac = "0.3.0"
 plonky2 = { git = "https://github.com/recmo/plonky2", branch = "recmo/hacks" }
 
 #plonky2 = { git = "https://github.com/mir-protocol/plonky2", branch = "main" }

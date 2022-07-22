@@ -4,6 +4,7 @@
 
 mod allocator;
 mod anyhow;
+mod conv;
 
 use self::{allocator::Allocator, anyhow::MapAny as _};
 use bytesize::ByteSize;
@@ -126,6 +127,14 @@ fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Ta
     builder.pop_context();
     output
 }
+
+// conv_layer
+
+// fn conv_layer(builder: &mut Builder, input: &Vec<Vec<Vec<Target>>>, filter: &[Target]) { 
+//     let input.len()
+// 
+// }
+
 // Plonky2 circuit
 struct Circuit {
     inputs:  Vec<Target>,

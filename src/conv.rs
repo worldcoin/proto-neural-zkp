@@ -20,14 +20,17 @@ pub fn convolution(input: Array3<i32>, kernel: Array4<i32>) -> (Array3<i32>, usi
     let mut output = Array3::zeros((h - 2 * dh, w - 2 * dw, c_out));
 
     // run convolution
-    // for height of kernel
+    // go over image height - kernel padding (2*dh)
     for i in dh..h - dh {
-        // for width of kernel
+        //  go over image width - kernel padding (2*dw)
         for j in dw..w - dw {
+            // kernel slice
             let a = &input.slice(s![i - dh..i + dh + 1, j - dw..j + dw + 1, ..]);
             // for output channels (number of kernels)
             for k in 0..c_out {
+                // filter channel
                 let b = &kernel.slice(s![k, .., .., ..]);
+                // apply filter on kernel slice
                 output[[i - dh, j - dw, k]] = (a * b).sum();
             }
         }

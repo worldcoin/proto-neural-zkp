@@ -1,6 +1,6 @@
 use ndarray::{s, Array3, Array4};
 
-pub fn convolution(input: Array3<i32>, kernel: Array4<i32>) -> (Array3<i32>, usize, String) {
+pub fn convolution(input: Array3<f32>, kernel: Array4<f32>) -> (Array3<f32>, usize, String) {
     // height, width, channels
     let (h, w, c) = input.dim();
 

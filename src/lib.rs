@@ -5,6 +5,7 @@
 mod allocator;
 mod anyhow;
 pub mod conv;
+pub mod relu;
 
 use self::{allocator::Allocator, anyhow::MapAny as _};
 use bytesize::ByteSize;

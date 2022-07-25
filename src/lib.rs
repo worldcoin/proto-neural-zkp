@@ -4,7 +4,7 @@
 
 mod allocator;
 mod anyhow;
-mod conv;
+pub mod conv;
 
 use self::{allocator::Allocator, anyhow::MapAny as _};
 use bytesize::ByteSize;
@@ -20,14 +20,13 @@ use plonky2::{
         circuit_builder::CircuitBuilder,
         circuit_data::{CircuitConfig, CircuitData},
         config::{GenericConfig, KeccakGoldilocksConfig, PoseidonGoldilocksConfig},
-        proof::CompressedProofWithPublicInputs,
+        proof::{CompressedProofWithPublicInputs, ProofWithPublicInputs},
     },
 };
 use rand::Rng as _;
 use std::{iter::once, sync::atomic::Ordering, time::Instant};
 use structopt::StructOpt;
 use tracing::{info, trace};
-use plonky2::plonk::proof::ProofWithPublicInputs;
 
 type Rng = rand_pcg::Mcg128Xsl64;
 
@@ -95,9 +94,10 @@ fn dot(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Target 
     // builder.push_context(Level::Info, "dot");
     let mut sum = builder.zero();
     // iterates over array coefficients and input and performs the dot product:
-    // sum = co[0] * in[0] + co[1] * in[1] .... + co[len(co)] * in[len(in)] <=> len(co) = len (in)
-    // each coefficient needs to be a Goldilocks field element (modular arithmetic inside a field element)
-    // CircuitBuilder.mul_const_add()
+    // sum = co[0] * in[0] + co[1] * in[1] .... + co[len(co)] * in[len(in)] <=>
+    // len(co) = len (in) each coefficient needs to be a Goldilocks field
+    // element (modular arithmetic inside a field element) CircuitBuilder.
+    // mul_const_add()
     for (&coefficient, &input) in coefficients.iter().zip(input) {
         let coefficient = to_field(coefficient);
         sum = builder.mul_const_add(coefficient, input, sum);
@@ -117,7 +117,8 @@ fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Ta
     // TODO: read docs CircuitBuilder.push_context(), Level
     builder.push_context(Level::Info, "full");
 
-    // output is a vector that contains dot products of coefficients and inputs, len(output) = k
+    // output is a vector that contains dot products of coefficients and inputs,
+    // len(output) = k
     let mut output = Vec::with_capacity(output_size);
     // &[i32].chunks_exact() creates an iterator over k arrays of len(input)
     for coefficients in coefficients.chunks_exact(input_size) {
@@ -130,9 +131,9 @@ fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Ta
 
 // conv_layer
 
-// fn conv_layer(builder: &mut Builder, input: &Vec<Vec<Vec<Target>>>, filter: &[Target]) { 
-//     let input.len()
-// 
+// fn conv_layer(builder: &mut Builder, input: &Vec<Vec<Vec<Target>>>, filter:
+// &[Target]) {     let input.len()
+//
 // }
 
 // Plonky2 circuit

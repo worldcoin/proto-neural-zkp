@@ -10,8 +10,8 @@ fn conv_test() {
     let seed = 694201337;
     let mut rng = Isaac64Rng::seed_from_u64(seed);
 
-    let input = Array3::random_using((120, 80, 3), Uniform::<i32>::new(-5, 5), &mut rng);
-    let kernel = Array4::random_using((32, 5, 5, 3), Uniform::<i32>::new(-10, 10), &mut rng);
+    let input = Array3::random_using((120, 80, 3), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
+    let kernel = Array4::random_using((32, 5, 5, 3), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
 
     // x is the result of  conv(input, kernel)
     let (x, n_params, name) = convolution(input, kernel);

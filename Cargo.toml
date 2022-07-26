@@ -49,6 +49,7 @@ log = "0.4.14"
 ndarray = "0.15.4"
 ndarray-linalg = "0.14.1"
 ndarray-rand = "0.14.0"
+ndarray-stats = " 0.5.0"
 rand_isaac = "0.3.0"
 plonky2 = { git = "https://github.com/recmo/plonky2", branch = "recmo/hacks" }
 

@@ -46,7 +46,7 @@ tracing-log = "0.1.2"
 tracing-subscriber = { version = "0.3", features = [ "env-filter", "json" ] }
 tracing-test = "0.2"
 log = "0.4.14"
-ndarray = "0.15.4"
+ndarray = {version = "0.15.4", features = ["rayon"]}
 ndarray-linalg = "0.14.1"
 ndarray-rand = "0.14.0"
 ndarray-stats = " 0.5.0"

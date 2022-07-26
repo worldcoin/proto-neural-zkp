@@ -1,4 +1,5 @@
 use ndarray::{s, Array3};
+// use ndarray::parallel::prelude::*;
 // required for finding element-wise maximum in array a
 use ndarray_stats::QuantileExt;
 
@@ -17,6 +18,9 @@ pub fn max_pooling_layer(input: Array3<f32>, s: usize) -> (Array3<f32>, i32, usi
 
     let mut output = Array3::<f32>::zeros((h / s, w / s, c));
 
+    // TODO: turn loops into iterators and parallelize with rayon or
+    // ndarray::parallel
+    // let h_iter = (0..h).into_par_iter().filter(|x| x % s == 0);
     for i in (0..h).step_by(s) {
         for j in (0..w).step_by(s) {
             for k in 0..c {

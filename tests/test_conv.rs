@@ -10,11 +10,16 @@ fn conv_test() {
     let seed = 694201337;
     let mut rng = Isaac64Rng::seed_from_u64(seed);
 
-    let input = Array3::random_using((120, 80, 3), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
-    let kernel = Array4::random_using((32, 5, 5, 3), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
+    let input = Array3::random_using((120, 80, 3), Uniform::<f32>::new(-5., 5.), &mut rng);
+    let kernel = Array4::random_using((32, 5, 5, 3), Uniform::<f32>::new(-10., 10.), &mut rng);
 
     // x is the result of  conv(input, kernel)
-    let (x, n_params, name) = convolution(input, kernel);
+    let Conv2D::<f32> {
+        output: x,
+        n_params,
+        n_multiplications,
+        name,
+    } = convolution(input, kernel);
 
     assert_eq!(x.dim(), (116, 76, 32));
 
@@ -23,8 +28,9 @@ fn conv_test() {
     println!(
         "# of parameters: {}\n
     output dim: {}x{}x{}\n
+    # of multiplications: {}
     {} output:\n
     {}",
-        n_params, dim_x, dim_y, dim_z, name, x
+        n_params, dim_x, dim_y, dim_z, n_multiplications, name, x
     );
 }

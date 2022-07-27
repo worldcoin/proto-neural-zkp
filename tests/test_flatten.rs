@@ -10,7 +10,12 @@ fn flatten_test() {
 
     let input = Array3::random_using((27, 17, 32), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
 
-    let (x, n_params, n_multiplications, name) = flatten_layer(input);
+    let Flatten::<f32> {
+        output: x,
+        n_params,
+        n_multiplications,
+        name,
+    } = flatten_layer(input);
 
     assert_eq!(x.len(), 14688);
 

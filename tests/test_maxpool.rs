@@ -11,7 +11,12 @@ fn maxpool_test() {
     let input = Array3::random_using((116, 76, 32), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
     let s = 2;
 
-    let (x, n_params, n_multiplications, name) = max_pooling_layer(input, s);
+    let MaxPool::<f32> {
+        output: x,
+        n_params,
+        n_multiplications,
+        name,
+    } = max_pooling_layer(input, s);
 
     assert_eq!(x.dim(), (58, 38, 32));
 

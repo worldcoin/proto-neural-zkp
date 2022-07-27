@@ -10,13 +10,27 @@ fn relu_test() {
         [1.2, 3.4],
     ]]);
 
-    let output = relu_layer(input);
+    let ReLU::<f32> {
+        output: x,
+        n_params,
+        n_multiplications,
+        name,
+    } = relu_layer(input);
 
     assert_eq!(
-        output,
+        x,
         arr3(&[[[1.2, 0.0], [0.0, 4.3]], [[5.2, 6.1], [7.6, 0.0]], [
             [9.3, 0.0],
             [1.2, 3.4],
         ]])
+    );
+    println!(
+        "
+        {} 
+        # of parameters: {}
+        output dim: {}x1
+        # of ops: {}
+        output:\n{}",
+        name, n_params, n_params, n_multiplications, x
     );
 }

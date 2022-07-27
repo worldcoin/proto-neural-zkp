@@ -1,6 +1,13 @@
 use ndarray::Array3;
 
-fn relu(v: f64) -> f64 {
+pub struct ReLU<T> {
+    pub output:            Array3<T>,
+    pub n_params:          i32,
+    pub n_multiplications: i32,
+    pub name:              String,
+}
+
+fn relu(v: f32) -> f32 {
     if v >= 0.0 {
         v
     } else {
@@ -8,7 +15,15 @@ fn relu(v: f64) -> f64 {
     }
 }
 
-pub fn relu_layer(input: Array3<f64>) -> Array3<f64> {
+pub fn relu_layer(input: Array3<f32>) -> ReLU<f32> {
     let output = input.mapv(relu);
-    output
+    let n_params = output.len() as i32;
+    let n_multiplications = 0;
+
+    ReLU {
+        output,
+        n_params,
+        n_multiplications,
+        name: String::from("ReLU"),
+    }
 }

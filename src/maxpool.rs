@@ -3,14 +3,22 @@ use ndarray::{s, Array3};
 // required for finding element-wise maximum in array a
 use ndarray_stats::QuantileExt;
 
-// @param input: h, w, c
+pub struct MaxPool<T> {
+    pub output:            Array3<T>,
+    pub n_params:          i32,
+    pub n_multiplications: usize,
+    pub name:              String,
+}
+
+// TODO: Generalize for more dimensions and number types
+// @param input: h, w, c (3D Array)
 // h - height
 // w - width
 // c - channels
 // @param s - square filter side length (bigger -> more downsampling -> less
 // definition) output: Array3 -> Downsampled input where biggest value in filter
 // prevails
-pub fn max_pooling_layer(input: Array3<f32>, s: usize) -> (Array3<f32>, i32, usize, String) {
+pub fn max_pooling_layer(input: Array3<f32>, s: usize) -> MaxPool<f32> {
     let (h, w, c) = input.dim();
 
     assert!(h % s == 0, "Height must be divisible by s!");
@@ -34,10 +42,10 @@ pub fn max_pooling_layer(input: Array3<f32>, s: usize) -> (Array3<f32>, i32, usi
     let n_params = 0;
     let n_multiplications = input.len();
 
-    return (
+    MaxPool {
         output,
         n_params,
         n_multiplications,
-        String::from("max-pool"),
-    );
+        name: String::from("max-pool"),
+    }
 }

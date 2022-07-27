@@ -6,6 +6,7 @@ mod allocator;
 mod anyhow;
 pub mod conv;
 pub mod flatten;
+pub mod fully_connected;
 pub mod maxpool;
 pub mod relu;
 

@@ -158,17 +158,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cblas"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3de46dff748ed7e891bc46faae117f48d2a7911041c6630aed3c61a3fe12326f"
-dependencies = [
- "cblas-sys",
- "libc",
- "num-complex",
-]
-
-[[package]]
 name = "cblas-sys"
 version = "0.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -796,7 +785,6 @@ dependencies = [
  "num-integer",
  "num-traits",
  "rawpointer",
- "rayon",
 ]
 
 [[package]]
@@ -846,7 +834,6 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bytesize",
- "cblas",
  "color-eyre",
  "criterion",
  "eyre",

@@ -1,7 +1,7 @@
-use ndarray::Array3;
+use ndarray::{ArrayD, IxDyn};
 
 pub struct ReLU<T> {
-    pub output:            Array3<T>,
+    pub output:            ArrayD<T>,
     pub n_params:          i32,
     pub n_multiplications: i32,
     pub name:              String,
@@ -15,7 +15,7 @@ fn relu(v: f32) -> f32 {
     }
 }
 
-pub fn relu_layer(input: Array3<f32>) -> ReLU<f32> {
+pub fn relu_layer(input: ArrayD<f32>) -> ReLU<f32> {
     let output = input.mapv(relu);
     let n_params = output.len() as i32;
     let n_multiplications = 0;

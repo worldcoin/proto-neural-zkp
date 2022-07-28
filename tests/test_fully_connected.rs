@@ -4,7 +4,7 @@ use neural_zkp::fully_connected::*;
 use rand_isaac::isaac64::Isaac64Rng;
 
 #[test]
-fn fc_test() {
+fn fully_connected_test() {
     let seed = 694201337;
     let mut rng = Isaac64Rng::seed_from_u64(seed);
 

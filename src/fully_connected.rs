@@ -32,6 +32,6 @@ pub fn fully_connected(
         output,
         n_params,
         n_multiplications,
-        name: String::from("normalize"),
+        name: String::from("fully_connected"),
     }
 }

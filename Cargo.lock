@@ -42,15 +42,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb07d2053ccdbe10e2af2995a2f116c1330396493dc1269f6a91d0ae82e19704"
 
 [[package]]
-name = "approx"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3f2a05fd1bd10b2527e20a2cd32d8873d115b8b39fe219ee25f42a8aca6ba278"
-dependencies = [
- "num-traits",
-]
-
-[[package]]
 name = "array_tool"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -144,27 +135,6 @@ name = "cast"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "37b2a672a2cb129a2e41c10b1224bb368f9f37a2b16b612598138befd7b37eb5"
-
-[[package]]
-name = "cauchy"
-version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ff11ddd2af3b5e80dd0297fee6e56ac038d9bdc549573cdb51bd6d2efe7f05e"
-dependencies = [
- "num-complex",
- "num-traits",
- "rand",
- "serde",
-]
-
-[[package]]
-name = "cblas-sys"
-version = "0.1.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6feecd82cce51b0204cf063f0041d69f24ce83f680d87514b004248e7b0fa65"
-dependencies = [
- "libc",
-]
 
 [[package]]
 name = "cc"
@@ -641,38 +611,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lapack"
-version = "0.18.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a7f0050af10913bc5e4f6091df38870cb5d4e45094d3dd551c1aff9d1d59b26"
-dependencies = [
- "lapack-sys",
- "libc",
- "num-complex",
-]
-
-[[package]]
-name = "lapack-sys"
-version = "0.12.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c1d3a8a9f07310243de6c6226f039f14bce8d2f4c96b5d30ddbcfa31eb4e94ad"
-dependencies = [
- "libc",
-]
-
-[[package]]
-name = "lax"
-version = "0.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e49ff5bbaf07352b492b17aab73a86871f0c6029f427035fd0562cd0df573c8a"
-dependencies = [
- "cauchy",
- "lapack",
- "num-traits",
- "thiserror",
-]
-
-[[package]]
 name = "lazy_static"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -777,29 +715,11 @@ version = "0.15.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dec23e6762830658d2b3d385a75aa212af2f67a4586d4442907144f3bb6a1ca8"
 dependencies = [
- "approx",
- "cblas-sys",
- "libc",
  "matrixmultiply",
  "num-complex",
  "num-integer",
  "num-traits",
  "rawpointer",
-]
-
-[[package]]
-name = "ndarray-linalg"
-version = "0.14.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6953b6c18697bc401c596b885350ea56a696da46415a10a6ed22f2a2e3d78d74"
-dependencies = [
- "cauchy",
- "lax",
- "ndarray",
- "num-complex",
- "num-traits",
- "rand",
- "thiserror",
 ]
 
 [[package]]
@@ -842,7 +762,6 @@ dependencies = [
  "log",
  "mimalloc",
  "ndarray",
- "ndarray-linalg",
  "ndarray-rand",
  "ndarray-stats",
  "num_cpus",
@@ -911,7 +830,6 @@ checksum = "7ae39348c8bc5fbd7f40c727a9925f03517afd2ab27d46702108b6a7e5414c19"
 dependencies = [
  "num-traits",
  "rand",
- "serde",
 ]
 
 [[package]]

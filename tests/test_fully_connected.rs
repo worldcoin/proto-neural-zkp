@@ -9,7 +9,7 @@ fn fc_test() {
     let mut rng = Isaac64Rng::seed_from_u64(seed);
 
     let input = Array1::random_using(14688, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
-    let weights = Array2::random_using((14688, 1000), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
+    let weights = Array2::random_using((1000, 14688), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
     let biases = Array1::random_using(1000, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
 
     let FCLayer::<f32> {
@@ -27,8 +27,8 @@ fn fc_test() {
         # of ops: {}
         output:\n{}",
         name,
-        x.dim(),
         n_params,
+        x.dim(),
         n_multiplications,
         x
     );

@@ -1,6 +1,6 @@
 use ndarray::{Array1, Array2, Array3, Array4, Ix1, Ix3};
 use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
-use neural_zkp::{conv::*, flatten::*, fully_connected::*, maxpool::*, relu::*};
+use neural_zkp::{conv::*, flatten::*, fully_connected::*, maxpool::*, normalize::*, relu::*};
 use rand_isaac::isaac64::Isaac64Rng;
 
 #[test]
@@ -209,5 +209,15 @@ fn nn_test() {
         x
     );
 
-    // normalization (uses ndarray_linalg)
+    let x = x.mapv(|x| x as i64);
+
+    // normalization
+    let Normalize::<f64> {
+        output: x,
+        n_params,
+        n_multiplications,
+        name,
+    } = normalize(x);
+
+    println!("final output (normalized):\n{}", x);
 }

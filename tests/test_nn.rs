@@ -32,9 +32,8 @@ fn nn_test() {
     assert_eq!(x.dim(), (116, 76, 32));
 
     println!(
-        "{} |  ({}, {}, {}) | {} |  {} \n output: \n 
-        {}",
-        name, dim_x, dim_y, dim_z, n_params, n_multiplications, x
+        "{} |  ({}, {}, {}) | {} |  {}",
+        name, dim_x, dim_y, dim_z, n_params, n_multiplications
     );
 
     // max pooling
@@ -53,10 +52,8 @@ fn nn_test() {
     let (dim_x, dim_y, dim_z) = x.dim();
 
     println!(
-        "
-        {} |  ({}, {}, {}) | {} |  {} \n output: \n 
-        {}",
-        name, dim_x, dim_y, dim_z, n_params, n_multiplications, x
+        "{} |  ({}, {}, {}) | {} |  {}",
+        name, dim_x, dim_y, dim_z, n_params, n_multiplications
     );
 
     // relu layer
@@ -72,10 +69,8 @@ fn nn_test() {
     assert_eq!(x.dim(), (58, 38, 32));
 
     println!(
-        "
-        {} |  ({}, {}, {}) | {} |  {} \n output: \n 
-        {}",
-        name, dim_x, dim_y, dim_z, n_params, n_multiplications, x
+        "{} |  ({}, {}, {}) | {} |  {}",
+        name, dim_x, dim_y, dim_z, n_params, n_multiplications
     );
 
     // conv layer
@@ -94,9 +89,8 @@ fn nn_test() {
     assert_eq!(x.dim(), (54, 34, 32));
 
     println!(
-        "{} |  ({}, {}, {}) | {} |  {} \n output: \n 
-        {}",
-        name, dim_x, dim_y, dim_z, n_params, n_multiplications, x
+        "{} |  ({}, {}, {}) | {} |  {}",
+        name, dim_x, dim_y, dim_z, n_params, n_multiplications
     );
 
     // max pooling
@@ -112,10 +106,8 @@ fn nn_test() {
     let (dim_x, dim_y, dim_z) = x.dim();
 
     println!(
-        "
-        {} |  ({}, {}, {}) | {} |  {} \n output: \n 
-        {}",
-        name, dim_x, dim_y, dim_z, n_params, n_multiplications, x
+        "{} |  ({}, {}, {}) | {} |  {}",
+        name, dim_x, dim_y, dim_z, n_params, n_multiplications
     );
 
     // relu layer
@@ -132,10 +124,8 @@ fn nn_test() {
     assert_eq!(x.dim(), (27, 17, 32));
 
     println!(
-        "
-        {} |  ({}, {}, {}) | {} |  {} \n output: \n 
-        {}",
-        name, dim_x, dim_y, dim_z, n_params, n_multiplications, x
+        "{} |  ({}, {}, {}) | {} |  {}",
+        name, dim_x, dim_y, dim_z, n_params, n_multiplications
     );
 
     // flatten
@@ -150,14 +140,11 @@ fn nn_test() {
     assert_eq!(x.len(), 14688);
 
     println!(
-        "
-        {} |  ({}x1) | {} |  {} \n output: \n 
-        {}",
+        "{} |  ({}x1) | {} |  {}",
         name,
         x.len(),
         n_params,
-        n_multiplications,
-        x
+        n_multiplications
     );
 
     // fully connected
@@ -173,14 +160,11 @@ fn nn_test() {
     } = fully_connected(x, weights, biases);
 
     println!(
-        "
-        {} |  ({}x1) | {} |  {} \n output: \n 
-        {}",
+        "{} |  ({}x1) | {} |  {}",
         name,
         x.len(),
         n_params,
-        n_multiplications,
-        x
+        n_multiplications
     );
 
     // relu layer
@@ -197,14 +181,11 @@ fn nn_test() {
     assert_eq!(x.len(), 1000);
 
     println!(
-        "
-        {} |  ({}) | {} |  {} \n output: \n 
-        {}",
+        "{} |  ({}) | {} |  {}",
         name,
         x.len(),
         n_params,
-        n_multiplications,
-        x
+        n_multiplications
     );
 
     // fully connected
@@ -220,9 +201,7 @@ fn nn_test() {
     } = fully_connected(x, weights, biases);
 
     println!(
-        "
-        {} |  ({}x1) | {} |  {} \n final output: \n 
-        {}",
+        "{} |  ({}x1) | {} |  {} \n final output: \n{}",
         name,
         x.len(),
         n_params,

@@ -209,7 +209,7 @@ fn nn_test() {
         x
     );
 
-    let x = x.mapv(|x| x as i64);
+    let x = x.mapv(|x| x as i128);
 
     // normalization
     let Normalize::<f64> {

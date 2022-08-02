@@ -1,14 +1,15 @@
-#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
-use ndarray::{s, Array3, Array4};
+use ndarray::{s, Array, Array3, Array4};
 
+#[allow(clippy::module_name_repetitions)]
 pub struct Conv2D<T> {
     pub output:            Array3<T>,
-    pub n_params:          i32,
+    pub n_params:          usize,
     pub n_multiplications: usize,
     pub name:              String,
 }
 
-pub fn convolution(input: &Array3<f32>, kernel: &Array4<f32>) -> Conv2D<f32> {
+#[must_use]
+pub fn convolution(input: &Array3<f32>, kernels: &Array4<f32>) -> Conv2D<f32> {
     // height, width, channels
     let (h, w, c) = input.dim();
 
@@ -59,10 +60,55 @@ pub fn convolution(input: &Array3<f32>, kernel: &Array4<f32>) -> Conv2D<f32> {
 }
 
 #[cfg(test)]
-pub mod test_conv {
+mod test {
     use super::*;
+    use ndarray::{array, stack};
     use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
     use rand::rngs::StdRng;
+
+    #[test]
+    fn test_small() {
+        let input = array![
+            [
+                [0.51682377_f32],
+                [-2.3552072],
+                [-0.120499134],
+                [2.3132505],
+                [-3.470844]
+            ],
+            [[-1.1741579], [3.4295654], [-1.2318683], [-1.9749749], [
+                -0.8161392
+            ]],
+            [[4.7562046], [-2.8918338], [2.308525], [2.6111293], [
+                -1.0765815
+            ]],
+            [[-4.1224194], [3.022316], [-4.5339823], [4.2970715], [
+                2.6773367
+            ]],
+            [[-4.289216], [-3.3795083], [-2.651745], [-1.1392272], [
+                3.9378529
+            ]]
+        ];
+        let kernel: Array4<f32> = array![
+            [[1.0336475_f32], [-4.7104144], [-0.24099827]],
+            [[4.626501], [-6.941688], [-2.3483157]],
+            [[6.859131], [-2.4637365], [-3.9499497]]
+        ]
+        .into_shape((1, 3, 3, 1))
+        .unwrap();
+        let expected = array![
+            [[15.940444], [-9.205237], [13.396301]],
+            [[1.7727833], [-10.784569], [-48.952152]],
+            [[-22.043327], [8.725433], [-97.68271]]
+        ];
+
+        let result = convolution(&input, &kernel);
+
+        let delta = (result.output - &expected);
+        let max_error = delta.into_iter().map(f32::abs).fold(0.0, f32::max);
+        dbg!(max_error);
+        assert!(max_error < 10.0 * f32::EPSILON);
+    }
 
     #[test]
     fn conv_test() {

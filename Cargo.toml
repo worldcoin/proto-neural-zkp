@@ -49,12 +49,9 @@ ndarray = "0.15.4"
 ndarray-rand = "0.14.0"
 ndarray-stats = " 0.5.0"
 rand_isaac = "0.3.0"
-plonky2 = { git = "https://github.com/recmo/plonky2", branch = "recmo/hacks" }
-
-#plonky2 = { git = "https://github.com/mir-protocol/plonky2", branch = "main" }
+plonky2 = { git = "https://github.com/mir-protocol/plonky2", branch = "main" }
 
 [dev-dependencies]
-pretty_assertions = "1.0"
 proptest = { version = "1.0" }
 tempfile = "3.0"
 
@@ -73,14 +70,3 @@ overflow-checks = true
 # while having neglible impact on incremental build times.
 [profile.dev.package."*"]
 opt-level = 3
-
-[patch."https://github.com/recmo/plonky2"]
-plonky2 = { path = "../../libraries/W/plonky2/plonky2" }
-plonky2_util = { path = "../../libraries/W/plonky2/util" }
-plonky2_field = { path = "../../libraries/W/plonky2/field" }
-
-
-# [patch."https://github.com/recmo/plonky2"]
-# plonky2 = { path = "../../WV/plonky2/plonky2" }
-# plonky2_util = { path = "../../WV/plonky2/util" }
-# plonky2_field = { path = "../../WV/plonky2/field" }

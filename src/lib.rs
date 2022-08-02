@@ -16,7 +16,7 @@ use bytesize::ByteSize;
 use eyre::{eyre, Result as EyreResult};
 use log::Level;
 use plonky2::{
-    field::field_types::Field,
+    field::types::Field,
     iop::{
         target::Target,
         witness::{PartialWitness, Witness},
@@ -282,7 +282,6 @@ pub async fn main(mut rng: Rng, mut options: Options) -> EyreResult<()> {
 #[cfg(test)]
 pub mod test {
     use super::*;
-    use pretty_assertions::assert_eq;
     use proptest::proptest;
     use tracing::{error, warn};
     use tracing_test::traced_test;

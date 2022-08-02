@@ -14,7 +14,7 @@ pub fn convolution(input: &Array3<f32>, kernels: &Array4<f32>) -> Conv2D<f32> {
     let (h, w, c) = input.dim();
 
     // output channels, kernel height, kernel width, input channels
-    let (c_out, hf, wf, c_in) = kernel.dim();
+    let (c_out, hf, wf, c_in) = kernels.dim();
 
     // input channels must match
     assert_eq!(c, c_in);
@@ -23,33 +23,26 @@ pub fn convolution(input: &Array3<f32>, kernels: &Array4<f32>) -> Conv2D<f32> {
     assert!(hf % 2 == 1);
     assert!(wf % 2 == 1);
 
-    let dh = hf / 2;
-    let dw = wf / 2;
+    let window_dim = (hf, wf, c_in);
+    let output_shape = (h - hf + 1, w - wf + 1);
+    let mut output = Array3::zeros((output_shape.0, output_shape.1, c_out));
 
-    let mut output = Array3::zeros((h - 2 * dh, w - 2 * dw, c_out));
-    let mut alen = 0;
-
-    // run convolution
-    // go over image height - kernel padding (2*dh)
-    for i in dh..h - dh {
-        //  go over image width - kernel padding (2*dw)
-        for j in dw..w - dw {
-            // kernel slice
-            let a = &input.slice(s![i - dh..i + dh + 1, j - dw..j + dw + 1, ..]);
-            alen = a.len();
-            // for output channels (number of kernels)
-            for k in 0..c_out {
-                // filter channel
-                let b = &kernel.slice(s![k, .., .., ..]);
-                // apply filter on kernel slice
-                output[[i - dh, j - dw, k]] = (a * b).sum();
-            }
-        }
+    for i in 0..c_out {
+        let mut output_mut = output.slice_mut(s![.., .., i]);
+        let kernel = kernels.slice(s![i, .., .., ..]);
+        let values = input
+            .windows(window_dim)
+            .into_iter()
+            .map(|w| (&w * &kernel).sum());
+        let values = Array::from_iter(values)
+            .into_shape(output_shape)
+            .expect("Kernel result dimensions mismatch");
+        output_mut.assign(&values);
     }
 
-    let n_params = kernel.len() as i32;
-    let name = String::from(format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in));
-    let n_multiplications = alen * c_out * (w - 2 * dw) * (h - 2 * dh);
+    let n_params = kernels.len();
+    let name = format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in);
+    let n_multiplications = output.len() * hf * wf * c_in;
 
     Conv2D {
         output,

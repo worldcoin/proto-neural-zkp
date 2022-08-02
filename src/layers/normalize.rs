@@ -20,3 +20,23 @@ pub fn normalize(input: Array1<i128>) -> Normalize<f64> {
         name: String::from("normalize"),
     }
 }
+
+#[cfg(test)]
+pub mod test {
+    use super::*;
+    use ndarray::arr1;
+
+    #[test]
+    fn normalize_test() {
+        let input = arr1(&[-6276474000, 8343393300, 8266027500, -7525360600, 7814137000]);
+
+        let Normalize::<f64> {
+            output: x,
+            n_params,
+            n_multiplications,
+            name,
+        } = normalize(input);
+
+        println!("{}", x);
+    }
+}

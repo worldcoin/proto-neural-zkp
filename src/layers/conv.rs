@@ -56,3 +56,41 @@ pub fn convolution(input: Array3<f32>, kernel: Array4<f32>) -> Conv2D<f32> {
         name,
     }
 }
+
+#[cfg(test)]
+pub mod test_conv {
+    use super::*;
+    use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
+    use rand::rngs::StdRng;
+
+    #[test]
+    fn conv_test() {
+        // man of culture fixed randomness seed
+        let seed = 694201337;
+        let mut rng = StdRng::seed_from_u64(seed);
+
+        let input = Array3::random_using((120, 80, 3), Uniform::<f32>::new(-5., 5.), &mut rng);
+        let kernel = Array4::random_using((32, 5, 5, 3), Uniform::<f32>::new(-10., 10.), &mut rng);
+
+        // x is the result of  conv(input, kernel)
+        let Conv2D::<f32> {
+            output: x,
+            n_params,
+            n_multiplications,
+            name,
+        } = convolution(input, kernel);
+
+        assert_eq!(x.dim(), (116, 76, 32));
+
+        let (dim_x, dim_y, dim_z) = x.dim();
+
+        println!(
+            "# of parameters: {}\n
+    output dim: {}x{}x{}\n
+    # of multiplications: {}
+    {} output:\n
+    {}",
+            n_params, dim_x, dim_y, dim_z, n_multiplications, name, x
+        );
+    }
+}

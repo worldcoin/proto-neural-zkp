@@ -42,12 +42,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb07d2053ccdbe10e2af2995a2f116c1330396493dc1269f6a91d0ae82e19704"
 
 [[package]]
-name = "array_tool"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f8cb5d814eb646a863c4f24978cff2880c4be96ad8cde2c0f0678732902e271"
-
-[[package]]
 name = "atty"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -371,12 +365,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
 
 [[package]]
-name = "fs_extra"
-version = "1.2.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2022715d62ab30faffd124d40b76f4134a550a87792276512b18d63272333394"
-
-[[package]]
 name = "futures"
 version = "0.3.21"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -571,27 +559,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "112c678d4050afce233f4f2852bb2eb519230b3cf12f33585275537d7e41578d"
 
 [[package]]
-name = "jemalloc-sys"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0d3b9f3f5c9b31aa0f5ed3260385ac205db665baa41d49bb8338008ae94ede45"
-dependencies = [
- "cc",
- "fs_extra",
- "libc",
-]
-
-[[package]]
-name = "jemallocator"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "43ae63fcfc45e99ab3d1b29a46782ad679e98436c3169d15a167a1108a724b69"
-dependencies = [
- "jemalloc-sys",
- "libc",
-]
-
-[[package]]
 name = "js-sys"
 version = "0.3.58"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -662,6 +629,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "add85d4dd35074e6fedc608f8c8f513a3548619a9024b751949ef0e8e45a4d84"
 dependencies = [
  "rawpointer",
+]
+
+[[package]]
+name = "maybe_rayon"
+version = "0.1.0"
+source = "git+https://github.com/mir-protocol/plonky2?branch=main#b34ace4c9017927b92e20ff4170aa678ee95e66d"
+dependencies = [
+ "rayon",
 ]
 
 [[package]]
@@ -965,20 +940,19 @@ checksum = "8b870d8c151b6f2fb93e84a13146138f05d02ed11c7e7c54f8826aaaf7c9f184"
 [[package]]
 name = "plonky2"
 version = "0.1.0"
+source = "git+https://github.com/mir-protocol/plonky2?branch=main#b34ace4c9017927b92e20ff4170aa678ee95e66d"
 dependencies = [
  "anyhow",
- "array_tool",
  "env_logger",
  "itertools",
- "jemallocator",
  "keccak-hash",
  "log",
+ "maybe_rayon",
  "num",
  "plonky2_field",
  "plonky2_util",
  "rand",
  "rand_chacha",
- "rayon",
  "serde",
  "serde_cbor",
  "static_assertions",
@@ -988,6 +962,7 @@ dependencies = [
 [[package]]
 name = "plonky2_field"
 version = "0.1.0"
+source = "git+https://github.com/mir-protocol/plonky2?branch=main#b34ace4c9017927b92e20ff4170aa678ee95e66d"
 dependencies = [
  "anyhow",
  "itertools",
@@ -995,12 +970,14 @@ dependencies = [
  "plonky2_util",
  "rand",
  "serde",
+ "static_assertions",
  "unroll",
 ]
 
 [[package]]
 name = "plonky2_util"
 version = "0.1.0"
+source = "git+https://github.com/mir-protocol/plonky2?branch=main#b34ace4c9017927b92e20ff4170aa678ee95e66d"
 
 [[package]]
 name = "plotters"
@@ -1892,3 +1869,15 @@ name = "windows_x86_64_msvc"
 version = "0.36.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c811ca4a8c853ef420abd8592ba53ddbbac90410fab6903b3e79972a631f7680"
+
+[[patch.unused]]
+name = "plonky2"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "plonky2_field"
+version = "0.1.0"
+
+[[patch.unused]]
+name = "plonky2_util"
+version = "0.1.0"

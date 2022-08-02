@@ -4,19 +4,16 @@
 
 mod allocator;
 mod anyhow;
-pub mod conv;
-pub mod flatten;
-pub mod fully_connected;
-pub mod maxpool;
-pub mod normalize;
-pub mod relu;
+
+pub mod layers;
+pub mod nn;
 
 use self::{allocator::Allocator, anyhow::MapAny as _};
 use bytesize::ByteSize;
 use eyre::{eyre, Result as EyreResult};
 use log::Level;
 use plonky2::{
-    field::field_types::Field,
+    field::types::Field,
     iop::{
         target::Target,
         witness::{PartialWitness, Witness},
@@ -289,12 +286,11 @@ pub mod test {
 
     #[test]
     #[allow(clippy::eq_op)]
-    fn test_with_proptest() {
-        proptest!(|(a in 0..5, b in 0..5)| {
-            assert_eq!(a + b, b + a);
-        });
-    }
-
+    // fn test_with_proptest() {
+    //     proptest!(|(a in 0..5, b in 0..5)| {
+    //         assert_eq!(a + b, b + a);
+    //     });
+    // }
     #[test]
     #[traced_test]
     fn test_with_log_output() {

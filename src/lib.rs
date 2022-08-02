@@ -1,7 +1,11 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
+// Stabilized soon: https://github.com/rust-lang/rust/pull/93827
 
 mod allocator;
 mod anyhow;
+
+pub mod layers;
+pub mod nn;
 
 use self::{allocator::Allocator, anyhow::MapAny as _};
 use bytesize::ByteSize;
@@ -90,6 +94,11 @@ fn dot(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Target 
     assert_eq!(coefficients.len(), input.len());
     // builder.push_context(Level::Info, "dot");
     let mut sum = builder.zero();
+    // iterates over array coefficients and input and performs the dot product:
+    // sum = co[0] * in[0] + co[1] * in[1] .... + co[len(co)] * in[len(in)] <=>
+    // len(co) = len (in) each coefficient needs to be a Goldilocks field
+    // element (modular arithmetic inside a field element) CircuitBuilder.
+    // mul_const_add()
     for (&coefficient, &input) in coefficients.iter().zip(input) {
         let coefficient = to_field(coefficient);
         sum = builder.mul_const_add(coefficient, input, sum);
@@ -98,20 +107,37 @@ fn dot(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Target 
     sum
 }
 
+// len(co) = k * len(in); k is a constant that belongs to N; k > 1 (ref 1)
 fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Target> {
     let input_size = input.len();
+    // len(output_size) = k
     let output_size = coefficients.len() / input_size;
+    // enforces (ref 1)
     assert_eq!(coefficients.len(), input_size * output_size);
 
+    // TODO: read docs CircuitBuilder.push_context(), Level
     builder.push_context(Level::Info, "full");
+
+    // output is a vector that contains dot products of coefficients and inputs,
+    // len(output) = k
     let mut output = Vec::with_capacity(output_size);
+    // &[i32].chunks_exact() creates an iterator over k arrays of len(input)
     for coefficients in coefficients.chunks_exact(input_size) {
+        // builder enforces Goldilock fields modular arithmetic
         output.push(dot(builder, coefficients, input));
     }
     builder.pop_context();
     output
 }
 
+// conv_layer
+
+// fn conv_layer(builder: &mut Builder, input: &Vec<Vec<Vec<Target>>>, filter:
+// &[Target]) {     let input.len()
+//
+// }
+
+// Plonky2 circuit
 struct Circuit {
     inputs:  Vec<Target>,
     outputs: Vec<Target>,
@@ -119,6 +145,7 @@ struct Circuit {
 }
 
 impl Circuit {
+    // options are inputs that can be changed from cli and have default values
     fn build(options: &Options, coefficients: &[i32]) -> Circuit {
         assert_eq!(coefficients.len(), options.input_size * options.output_size);
         info!(
@@ -136,6 +163,7 @@ impl Circuit {
 
         // Inputs
         builder.push_context(Level::Info, "Inputs");
+        // TODO: Look at CircuitBuilder.add_virtual_targets()
         let inputs = builder.add_virtual_targets(options.input_size);
         inputs
             .iter()
@@ -161,6 +189,8 @@ impl Circuit {
 
     fn prove(&self, input: &[i32]) -> EyreResult<Proof> {
         info!("Proving {} size input", input.len());
+        // TODO: Look into plonky2::iop::PartialWitness
+        // What's the difference between PW and W
         let mut pw = PartialWitness::new();
         for (&target, &value) in self.inputs.iter().zip(input) {
             pw.set_target(target, to_field(value));
@@ -177,6 +207,7 @@ impl Circuit {
             "Verifying proof with {} public inputs",
             proof.public_inputs.len()
         );
+        // Why proof.clone()
         self.data.verify(proof.clone()).map_any()
     }
 }
@@ -190,15 +221,19 @@ pub async fn main(mut rng: Rng, mut options: Options) -> EyreResult<()> {
     println!(
         "input_size,output_size,build_time_s,proof_time_s,proof_mem_b,proof_size_b,verify_time_s"
     );
+    // TODO: What does this line mean?
     let output_sizes: Box<dyn Iterator<Item = usize>> = if options.bench {
         Box::new((1..).map(|n| n * 1000))
     } else {
+        // what is once
         Box::new(once(options.output_size))
     };
+
     for output_size in output_sizes {
         options.output_size = output_size;
 
         // Coefficients
+        // what is quantizing?
         let quantize_coeff = |c: i32| c % (1 << options.coefficient_bits);
         let coefficients: Vec<i32> = (0..options.input_size * options.output_size)
             .map(|_| quantize_coeff(rng.gen()))
@@ -249,12 +284,11 @@ pub mod test {
 
     #[test]
     #[allow(clippy::eq_op)]
-    fn test_with_proptest() {
-        proptest!(|(a in 0..5, b in 0..5)| {
-            assert_eq!(a + b, b + a);
-        });
-    }
-
+    // fn test_with_proptest() {
+    //     proptest!(|(a in 0..5, b in 0..5)| {
+    //         assert_eq!(a + b, b + a);
+    //     });
+    // }
     #[test]
     #[traced_test]
     fn test_with_log_output() {

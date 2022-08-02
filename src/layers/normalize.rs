@@ -1,4 +1,3 @@
-#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::Array1;
 
 pub struct Normalize<T> {
@@ -23,7 +22,7 @@ pub fn normalize(input: &Array1<i128>) -> Normalize<f64> {
 }
 
 #[cfg(test)]
-pub mod test {
+mod test {
     use super::*;
     use ndarray::arr1;
 

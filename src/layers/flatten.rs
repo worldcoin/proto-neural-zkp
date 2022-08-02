@@ -1,4 +1,3 @@
-#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::{Array1, Array3};
 
 pub struct Flatten<T> {
@@ -23,7 +22,7 @@ pub fn flatten_layer(input: &Array3<f32>) -> Flatten<f32> {
 }
 
 #[cfg(test)]
-pub mod test {
+mod test {
     use super::*;
     use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
     use rand::rngs::StdRng;

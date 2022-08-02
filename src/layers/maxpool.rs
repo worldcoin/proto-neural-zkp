@@ -1,4 +1,3 @@
-#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::{s, Array3};
 use ndarray_stats::QuantileExt;
 

@@ -1,5 +1,10 @@
-#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
+// #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 // Stabilized soon: https://github.com/rust-lang/rust/pull/93827
+
+// Disable globally while still iterating on design
+#![allow(clippy::missing_panics_doc)]
+// TODO
+#![allow(unreadable_literal)]
 
 mod allocator;
 mod anyhow;
@@ -282,14 +287,12 @@ pub mod test {
     use tracing::{error, warn};
     use tracing_test::traced_test;
 
-    #[test]
     #[allow(clippy::eq_op)]
     // fn test_with_proptest() {
     //     proptest!(|(a in 0..5, b in 0..5)| {
     //         assert_eq!(a + b, b + a);
     //     });
     // }
-    #[test]
     #[traced_test]
     fn test_with_log_output() {
         error!("logged on the error level");

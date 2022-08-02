@@ -1,4 +1,3 @@
-#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::{Array1, Array2};
 
 pub struct FCLayer<T> {
@@ -62,7 +61,7 @@ pub mod test {
 
         println!(
             "
-        {} 
+        {}
         # of parameters: {}
         output dim: {}x1
         # of ops: {}

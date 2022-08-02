@@ -29,7 +29,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = convolution(&x, &f);
+        } = convolution(&x.view(), &f.view());
 
         let (dim_x, dim_y, dim_z) = x.dim();
 
@@ -86,7 +86,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = convolution(&x.into_dimensionality::<Ix3>().unwrap(), &f);
+        } = convolution(&x.into_dimensionality::<Ix3>().unwrap().view(), &f.view());
 
         let (dim_x, dim_y, dim_z) = x.dim();
 

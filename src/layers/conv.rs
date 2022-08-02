@@ -1,4 +1,4 @@
-use ndarray::{s, Array, Array3, Array4};
+use ndarray::{s, Array, Array3, Array4, ArrayView3, ArrayView4};
 
 #[allow(clippy::module_name_repetitions)]
 pub struct Conv2D<T> {
@@ -9,7 +9,7 @@ pub struct Conv2D<T> {
 }
 
 #[must_use]
-pub fn convolution(input: &Array3<f32>, kernels: &Array4<f32>) -> Conv2D<f32> {
+pub fn convolution(input: &ArrayView3<f32>, kernels: &ArrayView4<f32>) -> Conv2D<f32> {
     // height, width, channels
     let (h, w, c) = input.dim();
 
@@ -95,7 +95,7 @@ mod test {
             [[-22.043327], [8.725433], [-97.68271]]
         ];
 
-        let result = convolution(&input, &kernel);
+        let result = convolution(&input.view(), &kernel.view());
 
         let delta = (result.output - &expected);
         let max_error = delta.into_iter().map(f32::abs).fold(0.0, f32::max);
@@ -118,7 +118,7 @@ mod test {
             n_params,
             n_multiplications,
             name,
-        } = convolution(&input, &kernel);
+        } = convolution(&input.view(), &kernel.view());
 
         assert_eq!(x.dim(), (116, 76, 32));
 

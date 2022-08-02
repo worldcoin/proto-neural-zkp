@@ -8,7 +8,7 @@ pub mod test {
     use rand::rngs::StdRng;
 
     #[test]
-    fn nn_test() {
+    fn neural_net() {
         let seed = 694201337;
         let mut rng = StdRng::seed_from_u64(seed);
 

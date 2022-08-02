@@ -1,5 +1,7 @@
 use ndarray::{s, Array, Array3, Array4, ArrayView3, ArrayView4};
 
+use super::Layer;
+
 #[allow(clippy::module_name_repetitions)]
 pub struct Conv2D<T> {
     pub output:            Array3<T>,
@@ -18,9 +20,10 @@ impl Convolution {
     pub fn new(name: String, kernels: Array4<f32>) -> Convolution {
         Convolution { kernels, name }
     }
+}
 
-    #[must_use]
-    pub fn apply(&self, input: &ArrayView3<f32>) -> Array3<f32> {
+impl Layer for Convolution {
+    fn apply(&self, input: &ArrayView3<f32>) -> Array3<f32> {
         // height, width, channels
         let (h, w, c) = input.dim();
 
@@ -53,19 +56,16 @@ impl Convolution {
         output
     }
 
-    #[must_use]
-    pub fn name(&self) -> &str {
+    fn name(&self) -> &str {
         // Alt: format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in);
         &self.name
     }
 
-    #[must_use]
-    pub fn num_params(&self) -> usize {
+    fn num_params(&self) -> usize {
         self.kernels.len()
     }
 
-    #[must_use]
-    pub fn num_muls(&self, input: &ArrayView3<f32>) -> usize {
+    fn num_muls(&self, input: &ArrayView3<f32>) -> usize {
         // height, width, channels
         let (h, w, c) = input.dim();
 

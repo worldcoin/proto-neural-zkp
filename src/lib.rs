@@ -1,6 +1,4 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
-// Stabilized soon: https://github.com/rust-lang/rust/pull/93827
-#![feature(const_fn_trait_bound)]
 
 mod allocator;
 mod anyhow;
@@ -10,7 +8,7 @@ use bytesize::ByteSize;
 use eyre::{eyre, Result as EyreResult};
 use log::Level;
 use plonky2::{
-    field::field_types::Field,
+    field::types::Field,
     iop::{
         target::Target,
         witness::{PartialWitness, Witness},
@@ -19,7 +17,7 @@ use plonky2::{
         circuit_builder::CircuitBuilder,
         circuit_data::{CircuitConfig, CircuitData},
         config::{GenericConfig, KeccakGoldilocksConfig, PoseidonGoldilocksConfig},
-        proof::CompressedProofWithPublicInputs,
+        proof::{CompressedProofWithPublicInputs, ProofWithPublicInputs},
     },
 };
 use rand::Rng as _;
@@ -73,7 +71,7 @@ type C = PoseidonGoldilocksConfig;
 // type C = KeccakGoldilocksConfig;
 type F = <C as GenericConfig<D>>::F;
 type Builder = CircuitBuilder<F, D>;
-type Proof = CompressedProofWithPublicInputs<F, C, D>;
+type Proof = ProofWithPublicInputs<F, C, D>;
 
 // https://arxiv.org/pdf/1509.09308.pdf
 // https://en.wikipedia.org/wiki/Freivalds%27_algorithm ?
@@ -131,7 +129,7 @@ impl Circuit {
         let config = CircuitConfig {
             num_wires: options.num_wires,
             num_routed_wires: options.num_routed_wires,
-            constant_gate_size: options.constant_gate_size,
+            // constant_gate_size: options.constant_gate_size,
             ..CircuitConfig::default()
         };
         let mut builder = CircuitBuilder::<F, D>::new(config);
@@ -168,10 +166,10 @@ impl Circuit {
             pw.set_target(target, to_field(value));
         }
         let proof = self.data.prove(pw).map_any()?;
-        let compressed = proof.clone().compress(&self.data.common).map_any()?;
-        let proof_size = ByteSize(compressed.to_bytes().map_any()?.len() as u64);
+        // let compressed = proof.clone().compress(&self.data.common).map_any()?;
+        let proof_size = ByteSize(proof.to_bytes().map_any()?.len() as u64);
         info!("Proof size: {proof_size}");
-        Ok(compressed)
+        Ok(proof)
     }
 
     fn verify(&self, proof: &Proof) -> EyreResult<()> {
@@ -179,7 +177,7 @@ impl Circuit {
             "Verifying proof with {} public inputs",
             proof.public_inputs.len()
         );
-        self.data.verify_compressed(proof.clone()).map_any()
+        self.data.verify(proof.clone()).map_any()
     }
 }
 
@@ -245,7 +243,6 @@ pub async fn main(mut rng: Rng, mut options: Options) -> EyreResult<()> {
 #[cfg(test)]
 pub mod test {
     use super::*;
-    use pretty_assertions::assert_eq;
     use proptest::proptest;
     use tracing::{error, warn};
     use tracing_test::traced_test;

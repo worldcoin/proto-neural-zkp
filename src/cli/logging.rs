@@ -119,7 +119,6 @@ impl Options {
 #[cfg(test)]
 pub mod test {
     use super::*;
-    use pretty_assertions::assert_eq;
 
     #[test]
     fn test_parse_args() {

@@ -278,7 +278,6 @@ pub async fn main(mut rng: Rng, mut options: Options) -> EyreResult<()> {
 #[cfg(test)]
 pub mod test {
     use super::*;
-    use pretty_assertions::assert_eq;
     use proptest::proptest;
     use tracing::{error, warn};
     use tracing_test::traced_test;

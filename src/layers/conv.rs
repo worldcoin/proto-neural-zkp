@@ -8,6 +8,84 @@ pub struct Conv2D<T> {
     pub name:              String,
 }
 
+pub struct Convolution {
+    kernels: Array4<f32>,
+    name:    String,
+}
+
+impl Convolution {
+    #[must_use]
+    pub fn new(name: String, kernels: Array4<f32>) -> Convolution {
+        Convolution { kernels, name }
+    }
+
+    #[must_use]
+    pub fn apply(&self, input: &ArrayView3<f32>) -> Array3<f32> {
+        // height, width, channels
+        let (h, w, c) = input.dim();
+
+        // output channels, kernel height, kernel width, input channels
+        let (c_out, hf, wf, c_in) = self.kernels.dim();
+
+        // input channels must match
+        assert_eq!(c, c_in);
+
+        // height and width of kernel must be an uneven number
+        assert!(hf % 2 == 1);
+        assert!(wf % 2 == 1);
+
+        let window_dim = (hf, wf, c_in);
+        let output_shape = (h - hf + 1, w - wf + 1);
+        let mut output = Array3::zeros((output_shape.0, output_shape.1, c_out));
+
+        for i in 0..c_out {
+            let mut output_mut = output.slice_mut(s![.., .., i]);
+            let kernel = self.kernels.slice(s![i, .., .., ..]);
+            let values = input
+                .windows(window_dim)
+                .into_iter()
+                .map(|w| (&w * &kernel).sum());
+            let values = Array::from_iter(values)
+                .into_shape(output_shape)
+                .expect("Kernel result dimensions mismatch");
+            output_mut.assign(&values);
+        }
+        output
+    }
+
+    #[must_use]
+    pub fn name(&self) -> &str {
+        // Alt: format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in);
+        &self.name
+    }
+
+    #[must_use]
+    pub fn num_params(&self) -> usize {
+        self.kernels.len()
+    }
+
+    #[must_use]
+    pub fn num_muls(&self, input: &ArrayView3<f32>) -> usize {
+        // height, width, channels
+        let (h, w, c) = input.dim();
+
+        // output channels, kernel height, kernel width, input channels
+        let (c_out, hf, wf, c_in) = self.kernels.dim();
+
+        // input channels must match
+        assert_eq!(c, c_in);
+
+        // height and width of kernel must be an uneven number
+        assert!(hf % 2 == 1);
+        assert!(wf % 2 == 1);
+
+        let window_dim = (hf, wf, c_in);
+        let output_shape = (h - hf + 1, w - wf + 1);
+
+        output_shape.0 * output_shape.1 * c_out * hf * wf * c_in
+    }
+}
+
 #[must_use]
 pub fn convolution(input: &ArrayView3<f32>, kernels: &ArrayView4<f32>) -> Conv2D<f32> {
     // height, width, channels
@@ -95,9 +173,11 @@ mod test {
             [[-22.043327], [8.725433], [-97.68271]]
         ];
 
-        let result = convolution(&input.view(), &kernel.view());
+        let conv = Convolution::new("Convolution layer".into(), kernel);
 
-        let delta = (result.output - &expected);
+        let result = conv.apply(&input.view());
+
+        let delta = (result - &expected);
         let max_error = delta.into_iter().map(f32::abs).fold(0.0, f32::max);
         dbg!(max_error);
         assert!(max_error < 10.0 * f32::EPSILON);

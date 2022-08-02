@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::Array1;
 
 pub struct Normalize<T> {
@@ -7,7 +8,7 @@ pub struct Normalize<T> {
     pub name:              String,
 }
 
-pub fn normalize(input: Array1<i128>) -> Normalize<f64> {
+pub fn normalize(input: &Array1<i128>) -> Normalize<f64> {
     let n_params = 0;
     let n_multiplications = 1 + input.len() as i32;
     let norm = f64::sqrt(input.mapv(|x| x.pow(2)).sum() as f64);
@@ -35,7 +36,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = normalize(input);
+        } = normalize(&input);
 
         println!("{}", x);
     }

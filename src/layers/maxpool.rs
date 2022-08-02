@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::{s, Array3};
 use ndarray_stats::QuantileExt;
 
@@ -16,7 +17,7 @@ pub struct MaxPool<T> {
 // @param s - square filter side length (bigger -> more downsampling -> less
 // definition) output: Array3 -> Downsampled input where biggest value in filter
 // prevails
-pub fn max_pooling_layer(input: Array3<f32>, s: usize) -> MaxPool<f32> {
+pub fn max_pooling_layer(input: &Array3<f32>, s: usize) -> MaxPool<f32> {
     let (h, w, c) = input.dim();
 
     assert!(h % s == 0, "Height must be divisible by s!");
@@ -67,7 +68,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = max_pooling_layer(input, s);
+        } = max_pooling_layer(&input, s);
 
         assert_eq!(x.dim(), (58, 38, 32));
 

@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::{Array1, Array3};
 
 pub struct Flatten<T> {
@@ -7,10 +8,11 @@ pub struct Flatten<T> {
     pub name:              String,
 }
 
-pub fn flatten_layer(input: Array3<f32>) -> Flatten<f32> {
+pub fn flatten_layer(input: &Array3<f32>) -> Flatten<f32> {
     let n_params = 0;
     let n_multiplications = 0;
-    let output = input.into_iter().collect();
+
+    let output = Array1::from_iter(input.iter().map(|&x| x));
 
     Flatten {
         output,
@@ -38,7 +40,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = flatten_layer(input);
+        } = flatten_layer(&input);
 
         assert_eq!(x.len(), 14688);
 

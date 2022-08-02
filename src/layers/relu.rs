@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::ArrayD;
 
 pub struct ReLU<T> {
@@ -7,16 +8,8 @@ pub struct ReLU<T> {
     pub name:              String,
 }
 
-fn relu(v: f32) -> f32 {
-    if v >= 0.0 {
-        v
-    } else {
-        0.0
-    }
-}
-
-pub fn relu_layer(input: ArrayD<f32>) -> ReLU<f32> {
-    let output = input.mapv(relu);
+pub fn relu_layer(input: &ArrayD<f32>) -> ReLU<f32> {
+    let output = input.mapv(|x| f32::max(0.0, x));
     let n_params = output.len() as i32;
     let n_multiplications = 0;
 
@@ -48,7 +41,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = relu_layer(input);
+        } = relu_layer(&input);
 
         let result = x.clone();
 
@@ -87,7 +80,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = relu_layer(input);
+        } = relu_layer(&input);
 
         let result = x.clone();
 

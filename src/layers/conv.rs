@@ -1,3 +1,4 @@
+#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::{s, Array3, Array4};
 
 pub struct Conv2D<T> {
@@ -7,7 +8,7 @@ pub struct Conv2D<T> {
     pub name:              String,
 }
 
-pub fn convolution(input: Array3<f32>, kernel: Array4<f32>) -> Conv2D<f32> {
+pub fn convolution(input: &Array3<f32>, kernel: &Array4<f32>) -> Conv2D<f32> {
     // height, width, channels
     let (h, w, c) = input.dim();
 
@@ -78,7 +79,7 @@ pub mod test_conv {
             n_params,
             n_multiplications,
             name,
-        } = convolution(input, kernel);
+        } = convolution(&input, &kernel);
 
         assert_eq!(x.dim(), (116, 76, 32));
 

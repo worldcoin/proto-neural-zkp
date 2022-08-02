@@ -29,7 +29,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = convolution(x, f);
+        } = convolution(&x, &f);
 
         let (dim_x, dim_y, dim_z) = x.dim();
 
@@ -49,7 +49,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = max_pooling_layer(x, s);
+        } = max_pooling_layer(&x, s);
 
         assert_eq!(x.dim(), (58, 38, 32));
 
@@ -66,7 +66,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = relu_layer(x.into_dyn());
+        } = relu_layer(&x.into_dyn());
 
         let x = x.into_dimensionality::<Ix3>().unwrap();
 
@@ -86,7 +86,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = convolution(x.into_dimensionality::<Ix3>().unwrap(), f);
+        } = convolution(&x.into_dimensionality::<Ix3>().unwrap(), &f);
 
         let (dim_x, dim_y, dim_z) = x.dim();
 
@@ -103,7 +103,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = max_pooling_layer(x, 2);
+        } = max_pooling_layer(&x, 2);
 
         assert_eq!(x.dim(), (27, 17, 32));
 
@@ -121,7 +121,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = relu_layer(x.into_dyn());
+        } = relu_layer(&x.into_dyn());
 
         let x = x.into_dimensionality::<Ix3>().unwrap();
 
@@ -139,7 +139,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = flatten_layer(x);
+        } = flatten_layer(&x);
 
         assert_eq!(x.len(), 14688);
 
@@ -162,7 +162,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = fully_connected(x, weights, biases);
+        } = fully_connected(&x, &weights, &biases);
 
         println!(
             "{} |  ({}x1) | {} |  {}",
@@ -179,7 +179,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = relu_layer(x.into_dyn());
+        } = relu_layer(&x.into_dyn());
 
         let x = x.into_dimensionality::<Ix1>().unwrap();
 
@@ -203,7 +203,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = fully_connected(x, weights, biases);
+        } = fully_connected(&x, &weights, &biases);
 
         println!(
             "{} |  ({}x1) | {} |  {} \n final output: \n{}",
@@ -222,7 +222,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = normalize(x);
+        } = normalize(&x);
 
         println!("final output (normalized):\n{}", x);
     }

@@ -9,9 +9,9 @@ pub struct FCLayer<T> {
 }
 
 pub fn fully_connected(
-    input: Array1<f32>,
-    weights: Array2<f32>,
-    biases: Array1<f32>,
+    input: &Array1<f32>,
+    weights: &Array2<f32>,
+    biases: &Array1<f32>,
 ) -> FCLayer<f32> {
     assert!(input.ndim() == 1, "Input must be a flattenened array!");
     assert!(
@@ -23,7 +23,7 @@ pub fn fully_connected(
         "Output shapes must match!"
     );
 
-    let output = weights.dot(&input) + &biases;
+    let output = weights.dot(input) + biases;
 
     let n_params = (weights.len() + biases.len()) as i32;
 
@@ -58,7 +58,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = fully_connected(input, weights, biases);
+        } = fully_connected(&input, &weights, &biases);
 
         println!(
             "

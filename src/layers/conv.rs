@@ -1,4 +1,4 @@
-use ndarray::{s, Array, Array3, Array4, ArrayView3, ArrayView4};
+use ndarray::{s, Array, Array3, Array4, ArrayD, ArrayView3, ArrayView4, ArrayViewD, Ix3};
 
 use super::Layer;
 
@@ -23,8 +23,9 @@ impl Convolution {
 }
 
 impl Layer for Convolution {
-    fn apply(&self, input: &ArrayView3<f32>) -> Array3<f32> {
+    fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         // height, width, channels
+        let input = input.clone().into_dimensionality::<Ix3>().unwrap();
         let (h, w, c) = input.dim();
 
         // output channels, kernel height, kernel width, input channels
@@ -53,7 +54,7 @@ impl Layer for Convolution {
                 .expect("Kernel result dimensions mismatch");
             output_mut.assign(&values);
         }
-        output
+        output.into_dyn()
     }
 
     fn name(&self) -> &str {
@@ -65,7 +66,8 @@ impl Layer for Convolution {
         self.kernels.len()
     }
 
-    fn num_muls(&self, input: &ArrayView3<f32>) -> usize {
+    fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
+        let input = input.clone().into_dimensionality::<Ix3>().unwrap();
         // height, width, channels
         let (h, w, c) = input.dim();
 
@@ -133,7 +135,7 @@ pub fn convolution(input: &ArrayView3<f32>, kernels: &ArrayView4<f32>) -> Conv2D
 #[cfg(test)]
 mod test {
     use super::*;
-    use ndarray::{array, stack};
+    use ndarray::array;
     use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
     use rand::rngs::StdRng;
 
@@ -175,9 +177,9 @@ mod test {
 
         let conv = Convolution::new("Convolution layer".into(), kernel);
 
-        let result = conv.apply(&input.view());
+        let result = conv.apply(&input.into_dyn().view());
 
-        let delta = (result - &expected);
+        let delta = result - &expected;
         let max_error = delta.into_iter().map(f32::abs).fold(0.0, f32::max);
         dbg!(max_error);
         assert!(max_error < 10.0 * f32::EPSILON);

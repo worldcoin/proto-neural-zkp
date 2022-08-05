@@ -139,7 +139,7 @@ pub mod test {
             n_params,
             n_multiplications,
             name,
-        } = flatten_layer(&x);
+        } = flatten_layer(&x.into_dyn().view());
 
         assert_eq!(x.len(), 14688);
 

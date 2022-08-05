@@ -1,4 +1,4 @@
-use ndarray::{Array3, ArrayView3};
+use ndarray::{Array3, ArrayD, ArrayView3, ArrayViewD};
 
 pub mod conv;
 pub mod flatten;
@@ -7,16 +7,9 @@ pub mod maxpool;
 pub mod normalize;
 pub mod relu;
 
-pub struct OutputWrapper<T> {
-    pub output:            T,
-    pub n_params:          usize,
-    pub n_multiplications: usize,
-    pub name:              String,
-}
-
 trait Layer {
     #[must_use]
-    fn apply(&self, input: &ArrayView3<f32>) -> Array3<f32>;
+    fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32>;
 
     #[must_use]
     fn name(&self) -> &str;
@@ -25,7 +18,7 @@ trait Layer {
     fn num_params(&self) -> usize;
 
     #[must_use]
-    fn num_muls(&self, input: &ArrayView3<f32>) -> usize;
+    fn num_muls(&self, input: &ArrayViewD<f32>) -> usize;
 }
 
 pub struct NeuralNetwork {

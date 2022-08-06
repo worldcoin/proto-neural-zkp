@@ -1,16 +1,19 @@
 #[cfg(test)]
 pub mod test {
     use crate::layers::{
-        conv::*, flatten::*, fully_connected::*, maxpool::*, normalize::*, relu::*,
+        conv::Convolution, flatten::Flatten, fully_connected::FullyConnected, maxpool::MaxPooling,
+        normalize::Normalization, relu::Relu, Layer,
     };
-    use ndarray::{Array1, Array2, Array3, Array4, Ix1, Ix3};
+    use ndarray::{Array1, Array2, Array3, Array4, Ix3};
     use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
     use rand::rngs::StdRng;
-
+    use std::env;
     #[test]
     fn neural_net() {
         let seed = 694201337;
         let mut rng = StdRng::seed_from_u64(seed);
+
+        env::set_var("RUST_BACKTRACE", "1");
 
         println!(
             "{:<20} | {:<15} | {:<15} | {:<15}",
@@ -19,37 +22,59 @@ pub mod test {
         println!("{:-<77}", "");
 
         // input
-        let x = Array3::random_using((120, 80, 3), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
+        let input = Array3::random_using((120, 80, 3), Uniform::<f32>::new(-5., 5.), &mut rng);
+        let kernel = Array4::random_using((32, 5, 5, 3), Uniform::<f32>::new(-10., 10.), &mut rng);
 
-        // conv layer
-        // kernel
-        let f = Array4::random_using((32, 5, 5, 3), Uniform::<f32>::new(-10., 10.), &mut rng);
-        let Conv2D::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = convolution(&x.view(), &f.view());
+        let (c_out, hf, wf, c_in) = &kernel.dim();
 
-        let (dim_x, dim_y, dim_z) = x.dim();
+        let conv = Convolution::new(format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in), kernel);
 
-        assert_eq!(x.dim(), (116, 76, 32));
+        let n_multiplications = conv.num_muls(&input.clone().into_dyn().view());
+
+        let x = conv
+            .apply(&input.into_dyn().view())
+            .into_dimensionality::<Ix3>()
+            .unwrap();
+
+        // let Conv2D::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = convolution(&x.view(), &f.view());
+
+        let (dim_x, dim_y, dim_z) = &x.dim();
+
+        assert_eq!(&x.dim(), &(116, 76, 32));
 
         println!(
             "{} |  ({}, {}, {}) | {} |  {}",
-            name, dim_x, dim_y, dim_z, n_params, n_multiplications
+            conv.name(),
+            dim_x,
+            dim_y,
+            dim_z,
+            conv.num_params(),
+            n_multiplications
         );
 
         // max pooling
         // kernel side
-        let s = 2;
 
-        let MaxPool::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = max_pooling_layer(&x, s);
+        let maxpool = MaxPooling::new("max-pool".into(), 2);
+
+        let n_multiplications = maxpool.num_muls(&x.clone().into_dyn().view());
+
+        let x = maxpool
+            .apply(&x.into_dyn().view())
+            .into_dimensionality::<Ix3>()
+            .unwrap();
+
+        // let MaxPool::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = max_pooling_layer(&x, s);
 
         assert_eq!(x.dim(), (58, 38, 32));
 
@@ -57,16 +82,30 @@ pub mod test {
 
         println!(
             "{} |  ({}, {}, {}) | {} |  {}",
-            name, dim_x, dim_y, dim_z, n_params, n_multiplications
+            maxpool.name(),
+            dim_x,
+            dim_y,
+            dim_z,
+            maxpool.num_params(),
+            n_multiplications
         );
 
         // relu layer
-        let ReLU::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = relu_layer(&x.into_dyn());
+
+        let relu = Relu::new("ReLU".into());
+
+        let n_params = relu.num_params();
+
+        let n_multiplications = relu.num_muls(&x.clone().into_dyn().view());
+
+        let x = relu.apply(&x.into_dyn().view());
+
+        // let ReLU::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = relu_layer(&x.into_dyn());
 
         let x = x.into_dimensionality::<Ix3>().unwrap();
 
@@ -74,36 +113,66 @@ pub mod test {
 
         println!(
             "{} |  ({}, {}, {}) | {} |  {}",
-            name, dim_x, dim_y, dim_z, n_params, n_multiplications
+            relu.name(),
+            dim_x,
+            dim_y,
+            dim_z,
+            n_params,
+            n_multiplications
         );
 
         // conv layer
 
         // kernel
         let f = Array4::random_using((32, 5, 5, 32), Uniform::<f32>::new(-10., 10.), &mut rng);
-        let Conv2D::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = convolution(&x.into_dimensionality::<Ix3>().unwrap().view(), &f.view());
 
-        let (dim_x, dim_y, dim_z) = x.dim();
+        let (c_out, hf, wf, c_in) = &f.dim();
 
-        assert_eq!(x.dim(), (54, 34, 32));
+        dbg!(f.dim());
+        dbg!(x.dim());
+        let conv = Convolution::new(format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in), f);
+
+        let x = conv
+            .apply(&x.into_dyn().view())
+            .into_dimensionality::<Ix3>()
+            .unwrap();
+        // let Conv2D::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = convolution(&x.into_dimensionality::<Ix3>().unwrap().view(), &f.view());
+
+        let (dim_x, dim_y, dim_z) = &x.dim();
+
+        assert_eq!(&x.dim(), &(54, 34, 32));
 
         println!(
             "{} |  ({}, {}, {}) | {} |  {}",
-            name, dim_x, dim_y, dim_z, n_params, n_multiplications
+            conv.name(),
+            dim_x,
+            dim_y,
+            dim_z,
+            n_params,
+            n_multiplications
         );
 
         // max pooling
-        let MaxPool::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = max_pooling_layer(&x, 2);
+
+        let maxpool = MaxPooling::new("max-pool".into(), 2);
+
+        let n_multiplications = maxpool.num_muls(&x.clone().into_dyn().view());
+
+        let x = maxpool
+            .apply(&x.into_dyn().view())
+            .into_dimensionality::<Ix3>()
+            .unwrap();
+        // let MaxPool::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = max_pooling_layer(&x, 2);
 
         assert_eq!(x.dim(), (27, 17, 32));
 
@@ -111,41 +180,66 @@ pub mod test {
 
         println!(
             "{} |  ({}, {}, {}) | {} |  {}",
-            name, dim_x, dim_y, dim_z, n_params, n_multiplications
+            maxpool.name(),
+            dim_x,
+            dim_y,
+            dim_z,
+            n_params,
+            n_multiplications
         );
 
         // relu layer
 
-        let ReLU::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = relu_layer(&x.into_dyn());
+        let relu = Relu::new("ReLU".into());
 
-        let x = x.into_dimensionality::<Ix3>().unwrap();
+        let n_params = relu.num_params();
 
-        assert_eq!(x.dim(), (27, 17, 32));
+        let n_multiplications = relu.num_muls(&x.clone().into_dyn().view());
+
+        let x = relu
+            .apply(&x.into_dyn().view())
+            .into_dimensionality::<Ix3>()
+            .unwrap();
+
+        // let ReLU::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = relu_layer(&x.into_dyn());
+
+        assert_eq!(&x.dim(), &(27, 17, 32));
 
         println!(
             "{} |  ({}, {}, {}) | {} |  {}",
-            name, dim_x, dim_y, dim_z, n_params, n_multiplications
+            relu.name(),
+            dim_x,
+            dim_y,
+            dim_z,
+            n_params,
+            n_multiplications
         );
 
         // flatten
 
-        let Flatten::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = flatten_layer(&x.into_dyn().view());
+        let flatten = Flatten::new("flatten".into());
+
+        let n_params = flatten.num_params();
+        let n_multiplications = flatten.num_muls(&x.clone().into_dyn().view().clone());
+
+        let x = flatten.apply(&x.into_dyn().view());
+        // let Flatten::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = flatten_layer(&x.into_dyn().view());
 
         assert_eq!(x.len(), 14688);
 
         println!(
             "{} |  ({}x1) | {} |  {}",
-            name,
+            flatten.name(),
             x.len(),
             n_params,
             n_multiplications
@@ -157,37 +251,49 @@ pub mod test {
             Array2::random_using((1000, 14688), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
         let biases = Array1::random_using(1000, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
 
-        let FCLayer::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = fully_connected(&x, &weights, &biases);
+        let fully_connected = FullyConnected::new("fully connected".into(), weights, biases);
+
+        let n_params = fully_connected.num_params();
+
+        let n_multiplications = fully_connected.num_muls(&x.clone().into_dyn().view());
+
+        let x = fully_connected.apply(&x.into_dyn().view());
+
+        // let FCLayer::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = fully_connected(&x, &weights, &biases);
 
         println!(
             "{} |  ({}x1) | {} |  {}",
-            name,
+            fully_connected.name(),
             x.len(),
             n_params,
             n_multiplications
         );
 
         // relu layer
+        let relu = Relu::new("ReLU".into());
 
-        let ReLU::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = relu_layer(&x.into_dyn());
+        let n_params = relu.num_params();
 
-        let x = x.into_dimensionality::<Ix1>().unwrap();
+        let n_multiplications = relu.num_muls(&x.clone().into_dyn().view());
+
+        let x = relu.apply(&x.into_dyn().view());
+        // let ReLU::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = relu_layer(&x.into_dyn());
 
         assert_eq!(x.len(), 1000);
 
         println!(
             "{} |  ({}) | {} |  {}",
-            name,
+            relu.name(),
             x.len(),
             n_params,
             n_multiplications
@@ -198,31 +304,41 @@ pub mod test {
         let weights = Array2::random_using((5, 1000), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
         let biases = Array1::random_using(5, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
 
-        let FCLayer::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = fully_connected(&x, &weights, &biases);
+        let fully_connected = FullyConnected::new("fully connected".into(), weights, biases);
+
+        let n_params = fully_connected.num_params();
+
+        let n_multiplications = fully_connected.num_muls(&x.clone().into_dyn().view());
+
+        let x = fully_connected.apply(&x.into_dyn().view());
+
+        // let FCLayer::<f32> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = fully_connected(&x, &weights, &biases);
 
         println!(
             "{} |  ({}x1) | {} |  {} \n final output: \n{}",
-            name,
+            fully_connected.name(),
             x.len(),
             n_params,
             n_multiplications,
             x
         );
 
-        let x = x.mapv(|x| x as i128);
-
         // normalization
-        let Normalize::<f64> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = normalize(&x);
+
+        let normalize = Normalization::new("normalize".into());
+
+        let x = normalize.apply(&x.into_dyn().view());
+        // let Normalize::<f64> {
+        //     output: x,
+        //     n_params,
+        //     n_multiplications,
+        //     name,
+        // } = normalize(&x);
 
         println!("final output (normalized):\n{}", x);
     }

@@ -2,25 +2,25 @@ use ndarray::{Array1, ArrayD, ArrayViewD};
 
 use super::Layer;
 
-pub struct Flatten<T> {
-    pub output:            Array1<T>,
-    pub n_params:          i32,
-    pub n_multiplications: i32,
-    pub name:              String,
-}
+// pub struct Flatten<T> {
+//     pub output:            Array1<T>,
+//     pub n_params:          i32,
+//     pub n_multiplications: i32,
+//     pub name:              String,
+// }
 
-pub struct Flat {
+pub struct Flatten {
     name: String,
 }
 
-impl Flat {
+impl Flatten {
     #[must_use]
-    pub fn new(name: String) -> Flat {
-        Flat { name }
+    pub fn new(name: String) -> Flatten {
+        Flatten { name }
     }
 }
 
-impl Layer for Flat {
+impl Layer for Flatten {
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         let output = Array1::from_iter(input.iter().map(|&x| x));
         output.into_dyn()
@@ -39,19 +39,19 @@ impl Layer for Flat {
     }
 }
 
-pub fn flatten_layer(input: &ArrayViewD<f32>) -> Flatten<f32> {
-    let n_params = 0;
-    let n_multiplications = 0;
-
-    let output = Array1::from_iter(input.iter().map(|&x| x));
-
-    Flatten {
-        output,
-        n_params,
-        n_multiplications,
-        name: String::from("flatten"),
-    }
-}
+// pub fn flatten_layer(input: &ArrayViewD<f32>) -> Flatten<f32> {
+//     let n_params = 0;
+//     let n_multiplications = 0;
+//
+//     let output = Array1::from_iter(input.iter().map(|&x| x));
+//
+//     Flatten {
+//         output,
+//         n_params,
+//         n_multiplications,
+//         name: String::from("flatten"),
+//     }
+// }
 
 #[cfg(test)]
 mod test {
@@ -67,7 +67,7 @@ mod test {
 
         let input = Array3::random_using((27, 17, 32), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
 
-        let flat = Flat::new("Flatten".into());
+        let flat = Flatten::new("Flatten".into());
 
         let output = flat.apply(&input.clone().into_dyn().view());
 

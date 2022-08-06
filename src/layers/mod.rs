@@ -7,7 +7,7 @@ pub mod maxpool;
 pub mod normalize;
 pub mod relu;
 
-trait Layer {
+pub trait Layer {
     #[must_use]
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32>;
 

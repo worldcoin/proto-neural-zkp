@@ -1,4 +1,4 @@
-use ndarray::{s, Array, Array3, Array4, ArrayD, ArrayView3, ArrayView4, ArrayViewD, Ix3};
+use ndarray::{s, Array, Array3, Array4, ArrayD, ArrayViewD, Ix3};
 
 use super::Layer;
 
@@ -81,7 +81,6 @@ impl Layer for Convolution {
         assert!(hf % 2 == 1);
         assert!(wf % 2 == 1);
 
-        let window_dim = (hf, wf, c_in);
         let output_shape = (h - hf + 1, w - wf + 1);
 
         output_shape.0 * output_shape.1 * c_out * hf * wf * c_in

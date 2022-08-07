@@ -22,15 +22,14 @@ impl Flatten {
 
 impl Layer for Flatten {
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
-        let output = Array1::from_iter(input.iter().map(|&x| x));
-        output.into_dyn()
+        Array1::from_iter(input.iter().copied()).into_dyn()
     }
 
     fn name(&self) -> &str {
         &self.name
     }
 
-    fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
+    fn num_muls(&self, _input: &ArrayViewD<f32>) -> usize {
         0
     }
 
@@ -71,7 +70,7 @@ mod test {
 
         let output = flat.apply(&input.clone().into_dyn().view());
 
-        let n_multiplications = flat.num_muls(&input.clone().into_dyn().view());
+        let n_multiplications = flat.num_muls(&input.into_dyn().view());
 
         let n_params = flat.num_params();
 

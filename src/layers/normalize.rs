@@ -1,4 +1,4 @@
-use ndarray::{Array1, ArrayD, ArrayView, ArrayViewD};
+use ndarray::{Array1, ArrayD, ArrayViewD};
 
 use super::Layer;
 

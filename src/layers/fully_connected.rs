@@ -54,7 +54,7 @@ impl Layer for FullyConnected {
         self.weights.len() + self.biases.len()
     }
 
-    fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
+    fn num_muls(&self, _input: &ArrayViewD<f32>) -> usize {
         self.weights.len()
     }
 }

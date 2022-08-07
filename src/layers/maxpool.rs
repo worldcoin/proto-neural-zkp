@@ -103,8 +103,6 @@ pub fn max_pooling_layer(input: &Array3<f32>, s: usize) -> MaxPool<f32> {
 
 #[cfg(test)]
 pub mod test {
-    use core::num;
-
     use super::*;
     use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
     use rand::rngs::StdRng;
@@ -125,7 +123,7 @@ pub mod test {
 
         let n_params = maxpool.num_params();
 
-        let n_multiplications = maxpool.num_muls(&input.clone().into_dyn().view());
+        let n_multiplications = maxpool.num_muls(&input.into_dyn().view());
 
         assert_eq!(output.dim(), (58, 38, 32));
 

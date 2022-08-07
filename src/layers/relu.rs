@@ -39,7 +39,7 @@ impl Layer for Relu {
         self.params
     }
 
-    fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
+    fn num_muls(&self, _input: &ArrayViewD<f32>) -> usize {
         0
     }
 }

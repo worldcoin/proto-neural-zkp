@@ -26,11 +26,14 @@ pub struct NeuralNetwork {
 }
 
 impl NeuralNetwork {
-    pub fn apply(&self, input: &ArrayViewD<f32>) -> ArrayViewD<f32> {
-        let mut output = input.clone();
+    pub fn new(layers: Vec<Box<dyn Layer>>) -> Self {
+        Self { layers }
+    }
+
+    pub fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
+        let mut output = input.to_owned();
         for layer in &self.layers {
-            // doesn't compile
-            output = layer.apply(&output).view();
+            output = layer.apply(&output.view());
         }
         output
     }

@@ -1,5 +1,5 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
-use ndarray::{ArrayD, ArrayViewD};
+use ndarray::{ArrayD, ArrayViewD, Ix1, Ix3};
 
 use super::Layer;
 
@@ -41,6 +41,22 @@ impl Layer for Relu {
 
     fn num_muls(&self, _input: &ArrayViewD<f32>) -> usize {
         0
+    }
+
+    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
+        if dim == 1 {
+            let input = input.clone().into_dimensionality::<Ix1>().unwrap();
+
+            Some(vec![input.len()])
+        } else if dim == 3 {
+            let input = input.clone().into_dimensionality::<Ix3>().unwrap();
+
+            let (h, w, c) = input.dim();
+
+            Some(vec![h, w, c])
+        } else {
+            None
+        }
     }
 }
 

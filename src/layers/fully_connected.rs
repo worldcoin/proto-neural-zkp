@@ -57,6 +57,16 @@ impl Layer for FullyConnected {
     fn num_muls(&self, _input: &ArrayViewD<f32>) -> usize {
         self.weights.len()
     }
+
+    fn output_shape(&self, _input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
+        if dim == 1 {
+            let dim = self.biases.dim();
+
+            Some(vec![dim])
+        } else {
+            None
+        }
+    }
 }
 
 pub fn fully_connected(

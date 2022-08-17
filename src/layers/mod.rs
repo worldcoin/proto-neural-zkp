@@ -19,6 +19,8 @@ pub trait Layer {
 
     #[must_use]
     fn num_muls(&self, input: &ArrayViewD<f32>) -> usize;
+
+    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>>;
 }
 
 pub struct NeuralNetwork {
@@ -28,6 +30,11 @@ pub struct NeuralNetwork {
 impl NeuralNetwork {
     pub fn new(layers: Vec<Box<dyn Layer>>) -> Self {
         Self { layers }
+    }
+
+    pub fn add_layer(&mut self, layer: Box<dyn Layer>) {
+        // TODO: add dimensionality sanity checks
+        self.layers.push(layer);
     }
 
     pub fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {

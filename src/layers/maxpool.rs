@@ -59,6 +59,20 @@ impl Layer for MaxPooling {
     fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
         input.len()
     }
+
+    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
+        if dim == 3 {
+            let input = input.clone().into_dimensionality::<Ix3>().unwrap();
+            let (w, h, c) = input.dim();
+
+            assert!(h % self.kernel_side == 0, "Height must be divisible by s!");
+            assert!(w % self.kernel_side == 0, "Width must be divisible by s!");
+
+            Some(vec![w / self.kernel_side, h / self.kernel_side, c])
+        } else {
+            None
+        }
+    }
 }
 
 // TODO: Generalize for more dimensions and number types

@@ -85,6 +85,20 @@ impl Layer for Convolution {
 
         output_shape.0 * output_shape.1 * c_out * hf * wf * c_in
     }
+
+    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
+        if dim == 3 {
+            let input = input.clone().into_dimensionality::<Ix3>().unwrap();
+            let (h, w, _) = input.dim();
+
+            // output channels, kernel height, kernel width, input channels
+            let (_, hf, wf, _) = self.kernels.dim();
+
+            Some(vec![h - hf + 1, w - wf + 1])
+        } else {
+            None
+        }
+    }
 }
 
 //#[must_use]

@@ -31,12 +31,20 @@ impl Layer for Normalization {
         &self.name
     }
 
+    fn num_params(&self) -> usize {
+        0
+    }
+
     fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
         1 + input.len()
     }
 
-    fn num_params(&self) -> usize {
-        0
+    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
+        if dim == 1 {
+            Some(vec![input.len()])
+        } else {
+            None
+        }
     }
 }
 

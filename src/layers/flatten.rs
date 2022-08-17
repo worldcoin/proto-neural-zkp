@@ -29,12 +29,16 @@ impl Layer for Flatten {
         &self.name
     }
 
+    fn num_params(&self) -> usize {
+        0
+    }
+
     fn num_muls(&self, _input: &ArrayViewD<f32>) -> usize {
         0
     }
 
-    fn num_params(&self) -> usize {
-        0
+    fn output_shape(&self, input: &ArrayViewD<f32>, _dim: usize) -> Option<Vec<usize>> {
+        Some(vec![input.len()])
     }
 }
 

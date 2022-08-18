@@ -2,7 +2,7 @@
 pub mod test {
     use crate::layers::{
         conv::Convolution, flatten::Flatten, fully_connected::FullyConnected, maxpool::MaxPooling,
-        normalize::Normalization, relu::Relu, Layer, NeuralNetwork,
+        normalize::Normalize, relu::Relu, Layer, NeuralNetwork,
     };
     use ndarray::{Array1, Array2, Array3, Array4, Ix3};
     use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
@@ -20,11 +20,10 @@ pub mod test {
 
         // input
         let input = Array3::random_using((120, 80, 3), Uniform::<f32>::new(-5., 5.), &mut rng);
+
         let kernel = Array4::random_using((32, 5, 5, 3), Uniform::<f32>::new(-10., 10.), &mut rng);
 
-        let (c_out, hf, wf, c_in) = &kernel.dim();
-
-        let conv = Convolution::new(format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in), kernel);
+        let conv = Convolution::new(kernel);
 
         let n_multiplications = conv.num_muls(&input.clone().into_dyn().view());
 
@@ -57,7 +56,7 @@ pub mod test {
         // max pooling
         // kernel side
 
-        let maxpool = MaxPooling::new("max-pool".into(), 2);
+        let maxpool = MaxPooling::new(2);
 
         let n_multiplications = maxpool.num_muls(&x.clone().into_dyn().view());
 
@@ -89,7 +88,7 @@ pub mod test {
 
         // relu layer
 
-        let relu = Relu::new("ReLU".into());
+        let relu = Relu::new();
 
         let n_params = relu.num_params();
 
@@ -127,7 +126,7 @@ pub mod test {
 
         dbg!(f.dim());
         dbg!(x.dim());
-        let conv = Convolution::new(format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in), f);
+        let conv = Convolution::new(f);
 
         let x = conv
             .apply(&x.into_dyn().view())
@@ -156,7 +155,7 @@ pub mod test {
 
         // max pooling
 
-        let maxpool = MaxPooling::new("max-pool".into(), 2);
+        let maxpool = MaxPooling::new(2);
 
         let n_multiplications = maxpool.num_muls(&x.clone().into_dyn().view());
 
@@ -187,7 +186,7 @@ pub mod test {
 
         // relu layer
 
-        let relu = Relu::new("ReLU".into());
+        let relu = Relu::new();
 
         let n_params = relu.num_params();
 
@@ -219,7 +218,7 @@ pub mod test {
 
         // flatten
 
-        let flatten = Flatten::new("flatten".into());
+        let flatten = Flatten::new();
 
         let n_params = flatten.num_params();
         let n_multiplications = flatten.num_muls(&x.clone().into_dyn().view().clone());
@@ -248,7 +247,7 @@ pub mod test {
             Array2::random_using((1000, 14688), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
         let biases = Array1::random_using(1000, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
 
-        let fully_connected = FullyConnected::new("fully connected".into(), weights, biases);
+        let fully_connected = FullyConnected::new(weights, biases);
 
         let n_params = fully_connected.num_params();
 
@@ -272,7 +271,7 @@ pub mod test {
         );
 
         // relu layer
-        let relu = Relu::new("ReLU".into());
+        let relu = Relu::new();
 
         let n_params = relu.num_params();
 
@@ -301,7 +300,7 @@ pub mod test {
         let weights = Array2::random_using((5, 1000), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
         let biases = Array1::random_using(5, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
 
-        let fully_connected = FullyConnected::new("fully connected".into(), weights, biases);
+        let fully_connected = FullyConnected::new(weights, biases);
 
         let n_params = fully_connected.num_params();
 
@@ -327,7 +326,7 @@ pub mod test {
 
         // normalization
 
-        let normalize = Normalization::new("normalize".into());
+        let normalize = Normalize::new();
 
         let x = normalize.apply(&x.into_dyn().view());
         // let Normalize::<f64> {
@@ -364,57 +363,43 @@ pub mod test {
         );
         println!("{:-<77}", "");
 
-        // input
         let input = Array3::random_using((120, 80, 3), Uniform::<f32>::new(-5., 5.), &mut rng);
 
-        let mut layers: Vec<Box<dyn Layer>> = vec![];
+        let mut neural_net = NeuralNetwork::new();
 
         let kernel = Array4::random_using((32, 5, 5, 3), Uniform::<f32>::new(-10., 10.), &mut rng);
 
-        let (c_out, hf, wf, c_in) = &kernel.dim();
+        neural_net.add_layer(Box::new(Convolution::new(kernel)));
 
-        layers.push(Box::new(Convolution::new(
-            format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in),
-            kernel,
-        )));
-        layers.push(Box::new(MaxPooling::new("max-pool".into(), 2)));
-        layers.push(Box::new(Relu::new("ReLU".into())));
+        neural_net.add_layer(Box::new(MaxPooling::new(2)));
 
-        let f = Array4::random_using((32, 5, 5, 32), Uniform::<f32>::new(-10., 10.), &mut rng);
-        let (c_out, hf, wf, c_in) = &f.dim();
+        neural_net.add_layer(Box::new(Relu::new()));
 
-        layers.push(Box::new(Convolution::new(
-            format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in),
-            f,
-        )));
-        layers.push(Box::new(MaxPooling::new("max-pool".into(), 2)));
-        layers.push(Box::new(Relu::new("ReLU".into())));
-        layers.push(Box::new(Flatten::new("flatten".into())));
+        let kernel = Array4::random_using((32, 5, 5, 32), Uniform::<f32>::new(-10., 10.), &mut rng);
 
+        neural_net.add_layer(Box::new(Convolution::new(kernel)));
+
+        neural_net.add_layer(Box::new(MaxPooling::new(2)));
+        neural_net.add_layer(Box::new(Relu::new()));
+        neural_net.add_layer(Box::new(Flatten::new()));
         let weights =
             Array2::random_using((1000, 14688), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
         let biases = Array1::random_using(1000, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
-        layers.push(Box::new(FullyConnected::new(
-            "fully connected".into(),
-            weights,
-            biases,
-        )));
-        layers.push(Box::new(Relu::new("ReLU".into())));
+        neural_net.add_layer(Box::new(FullyConnected::new(weights, biases)));
+        neural_net.add_layer(Box::new(Relu::new()));
 
         let weights = Array2::random_using((5, 1000), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
         let biases = Array1::random_using(5, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
 
-        layers.push(Box::new(FullyConnected::new(
-            "fully connected".into(),
-            weights,
-            biases,
-        )));
-        layers.push(Box::new(Normalization::new("normalize".into())));
+        neural_net.add_layer(Box::new(FullyConnected::new(weights, biases)));
+        neural_net.add_layer(Box::new(Normalize::new()));
 
-        let neural_net = NeuralNetwork::new(layers);
+        let output = neural_net.apply(&input.into_dyn().view(), 3);
 
-        let output = neural_net.apply(&input.into_dyn().view());
-
-        println!("final output (normalized):\n{}", output);
+        if output.is_some() {
+            println!("final output (normalized):\n{}", output.unwrap());
+        } else {
+            print!("Unsupported dimensionality of input Array");
+        }
     }
 }

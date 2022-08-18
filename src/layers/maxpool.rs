@@ -17,8 +17,11 @@ pub struct MaxPooling {
 
 impl MaxPooling {
     #[must_use]
-    pub fn new(name: String, kernel_side: usize) -> MaxPooling {
-        MaxPooling { name, kernel_side }
+    pub fn new(kernel_side: usize) -> MaxPooling {
+        MaxPooling {
+            name: "max-pool".into(),
+            kernel_side,
+        }
     }
 }
 
@@ -128,7 +131,7 @@ pub mod test {
 
         let input = Array3::random_using((116, 76, 32), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
 
-        let maxpool = MaxPooling::new("max-pool".into(), 2);
+        let maxpool = MaxPooling::new(2);
 
         let output = maxpool
             .apply(&input.clone().into_dyn().view())

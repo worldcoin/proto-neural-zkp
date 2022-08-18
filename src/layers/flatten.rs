@@ -15,8 +15,10 @@ pub struct Flatten {
 
 impl Flatten {
     #[must_use]
-    pub fn new(name: String) -> Flatten {
-        Flatten { name }
+    pub fn new() -> Flatten {
+        Flatten {
+            name: "Flatten".into(),
+        }
     }
 }
 
@@ -70,7 +72,7 @@ mod test {
 
         let input = Array3::random_using((27, 17, 32), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
 
-        let flat = Flatten::new("Flatten".into());
+        let flat = Flatten::new();
 
         let output = flat.apply(&input.clone().into_dyn().view());
 

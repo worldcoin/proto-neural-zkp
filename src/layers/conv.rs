@@ -1,3 +1,5 @@
+use std::fmt::format;
+
 use ndarray::{s, Array, Array3, Array4, ArrayD, ArrayViewD, Ix3};
 
 use super::Layer;
@@ -11,14 +13,17 @@ use super::Layer;
 //}
 
 pub struct Convolution {
-    kernels: Array4<f32>,
-    name:    String,
+    kernel: Array4<f32>,
+    name:   String,
 }
 
 impl Convolution {
     #[must_use]
-    pub fn new(name: String, kernels: Array4<f32>) -> Convolution {
-        Convolution { kernels, name }
+    pub fn new(kernel: Array4<f32>) -> Convolution {
+        let (c_out, hf, wf, c_in) = kernel.dim();
+        let name = format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in);
+
+        Convolution { kernel, name }
     }
 }
 
@@ -29,7 +34,7 @@ impl Layer for Convolution {
         let (h, w, c) = input.dim();
 
         // output channels, kernel height, kernel width, input channels
-        let (c_out, hf, wf, c_in) = self.kernels.dim();
+        let (c_out, hf, wf, c_in) = self.kernel.dim();
 
         // input channels must match
         assert_eq!(c, c_in);
@@ -44,7 +49,7 @@ impl Layer for Convolution {
 
         for i in 0..c_out {
             let mut output_mut = output.slice_mut(s![.., .., i]);
-            let kernel = self.kernels.slice(s![i, .., .., ..]);
+            let kernel = self.kernel.slice(s![i, .., .., ..]);
             let values = input
                 .windows(window_dim)
                 .into_iter()
@@ -63,7 +68,7 @@ impl Layer for Convolution {
     }
 
     fn num_params(&self) -> usize {
-        self.kernels.len()
+        self.kernel.len()
     }
 
     fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
@@ -72,7 +77,7 @@ impl Layer for Convolution {
         let (h, w, c) = input.dim();
 
         // output channels, kernel height, kernel width, input channels
-        let (c_out, hf, wf, c_in) = self.kernels.dim();
+        let (c_out, hf, wf, c_in) = self.kernel.dim();
 
         // input channels must match
         assert_eq!(c, c_in);
@@ -92,7 +97,7 @@ impl Layer for Convolution {
             let (h, w, _) = input.dim();
 
             // output channels, kernel height, kernel width, input channels
-            let (_, hf, wf, _) = self.kernels.dim();
+            let (_, hf, wf, _) = self.kernel.dim();
 
             Some(vec![h - hf + 1, w - wf + 1])
         } else {
@@ -188,7 +193,7 @@ mod test {
             [[-22.043327], [8.725433], [-97.68271]]
         ];
 
-        let conv = Convolution::new("Convolution layer".into(), kernel);
+        let conv = Convolution::new(kernel);
 
         let result = conv.apply(&input.into_dyn().view());
 
@@ -209,7 +214,7 @@ mod test {
 
         let (c_out, hf, wf, c_in) = &kernel.dim();
 
-        let conv = Convolution::new(format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in), kernel);
+        let conv = Convolution::new(kernel);
 
         let result = conv
             .apply(&input.clone().into_dyn().view())

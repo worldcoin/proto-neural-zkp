@@ -1,4 +1,6 @@
-use ndarray::{Array3, ArrayD, ArrayView3, ArrayViewD};
+use std::fmt::Display;
+
+use ndarray::{Array3, ArrayD, ArrayView3, ArrayViewD, Ix3};
 
 pub mod conv;
 pub mod flatten;
@@ -23,25 +25,36 @@ pub trait Layer {
     fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>>;
 }
 
+// TODO
+impl Display for Box<dyn Layer> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
+    }
+}
+
 pub struct NeuralNetwork {
     layers: Vec<Box<dyn Layer>>,
 }
 
 impl NeuralNetwork {
-    pub fn new(layers: Vec<Box<dyn Layer>>) -> Self {
-        Self { layers }
+    pub fn new() -> Self {
+        Self { layers: vec![] }
     }
 
     pub fn add_layer(&mut self, layer: Box<dyn Layer>) {
-        // TODO: add dimensionality sanity checks
         self.layers.push(layer);
     }
 
-    pub fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
-        let mut output = input.to_owned();
-        for layer in &self.layers {
-            output = layer.apply(&output.view());
+    pub fn apply(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<ArrayD<f32>> {
+        if dim == 3 {
+            let mut output = input.view().into_owned();
+            for layer in &self.layers {
+                // TODO: add dimensionality sanity checks
+                output = layer.apply(&output.view());
+            }
+            Some(output)
+        } else {
+            None
         }
-        output
     }
 }

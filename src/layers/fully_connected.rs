@@ -17,11 +17,11 @@ pub struct FullyConnected {
 
 impl FullyConnected {
     #[must_use]
-    pub fn new(name: String, weights: Array2<f32>, biases: Array1<f32>) -> FullyConnected {
+    pub fn new(weights: Array2<f32>, biases: Array1<f32>) -> FullyConnected {
         FullyConnected {
             weights,
             biases,
-            name,
+            name: "fully connected".into(),
         }
     }
 }
@@ -60,9 +60,9 @@ impl Layer for FullyConnected {
 
     fn output_shape(&self, _input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
         if dim == 1 {
-            let dim = self.biases.dim();
+            let odim = self.biases.dim();
 
-            Some(vec![dim])
+            Some(vec![odim])
         } else {
             None
         }
@@ -114,7 +114,7 @@ pub mod test {
             Array2::random_using((1000, 14688), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
         let biases = Array1::random_using(1000, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
 
-        let fully_connected = FullyConnected::new("fully_connected".into(), weights, biases);
+        let fully_connected = FullyConnected::new(weights, biases);
 
         let output = fully_connected.apply(&input.clone().into_dyn().view());
 

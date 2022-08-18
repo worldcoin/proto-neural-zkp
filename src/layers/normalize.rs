@@ -1,26 +1,21 @@
-use ndarray::{Array1, ArrayD, ArrayViewD};
+use ndarray::{ArrayD, ArrayViewD};
 
 use super::Layer;
 
-pub struct Normalize<T> {
-    pub output:            Array1<T>,
-    pub n_params:          i32,
-    pub n_multiplications: i32,
-    pub name:              String,
-}
-
-pub struct Normalization {
+pub struct Normalize {
     name: String,
 }
 
-impl Normalization {
+impl Normalize {
     #[must_use]
-    pub fn new(name: String) -> Normalization {
-        Normalization { name }
+    pub fn new() -> Normalize {
+        Normalize {
+            name: "Normalize".into(),
+        }
     }
 }
 
-impl Layer for Normalization {
+impl Layer for Normalize {
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         let input = input.clone().mapv(|x| x as i128);
         let norm = f32::sqrt(input.mapv(|x| x.pow(2)).sum() as f32);
@@ -48,20 +43,6 @@ impl Layer for Normalization {
     }
 }
 
-pub fn normalize(input: &Array1<i128>) -> Normalize<f64> {
-    let n_params = 0;
-    let n_multiplications = 1 + input.len() as i32;
-    let norm = f64::sqrt(input.mapv(|x| x.pow(2)).sum() as f64);
-    let output = input.mapv(|x| x as f64 / norm);
-
-    Normalize {
-        output,
-        n_params,
-        n_multiplications,
-        name: String::from("normalize"),
-    }
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
@@ -77,7 +58,7 @@ mod test {
             7814137000.,
         ]);
 
-        let normalize = Normalization::new("normalize".into());
+        let normalize = Normalize::new();
 
         let output = normalize.apply(&input.into_dyn().view());
 
@@ -88,13 +69,6 @@ mod test {
         let max_error = delta.into_iter().map(f32::abs).fold(0.0, f32::max);
 
         assert!(max_error < 10.0 * f32::EPSILON);
-
-        // let Normalize::<f64> {
-        //     output: x,
-        //     n_params,
-        //     n_multiplications,
-        //     name,
-        // } = normalize(&input);
 
         println!("{}", output);
     }

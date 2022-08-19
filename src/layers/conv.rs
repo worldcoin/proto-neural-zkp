@@ -67,15 +67,8 @@ impl Layer for Convolution {
     }
 
     fn num_muls(&self) -> usize {
-        // height, width, channels
-        let input_shape = self.input_shape();
-
-        let h = input_shape[0];
-        let w = input_shape[1];
-        let c = input_shape[2];
-
         // output channels, kernel height, kernel width, input channels
-        let (c_out, hf, wf, c_in) = self.kernel.dim();
+        let (c_out, hf, wf, _) = self.kernel.dim();
 
         let output_shape = self.output_shape();
 
@@ -101,7 +94,8 @@ impl Layer for Convolution {
     }
 }
 
-mod test {
+#[cfg(test)]
+pub mod test {
     use super::*;
 
     #[test]

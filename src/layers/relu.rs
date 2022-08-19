@@ -63,9 +63,9 @@ pub mod test {
             [1.2, 3.4],
         ]]);
 
-        let mut relu = Relu::new(vec![3, 2, 2]);
+        let relu = Relu::new(vec![3, 2, 2]);
 
-        let output = relu.apply(&input.clone().into_dyn().view());
+        let output = relu.apply(&input.into_dyn().view());
 
         let n_params = relu.num_params();
 
@@ -107,9 +107,9 @@ pub mod test {
     fn relu_test1() {
         let input = arr1(&[-4., -3.4, 6., 7., 1., -3.]).into_dyn();
 
-        let mut relu = Relu::new(vec![6]);
+        let relu = Relu::new(vec![6]);
 
-        let output = relu.apply(&input.clone().into_dyn().view());
+        let output = relu.apply(&input.into_dyn().view());
 
         let n_params = relu.num_params();
 

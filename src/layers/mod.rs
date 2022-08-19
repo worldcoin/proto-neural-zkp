@@ -31,9 +31,10 @@ impl Display for Box<dyn Layer> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(
             f,
-            "{:<20} | {:<15?} | {:<15} | {:<15}",
+            "{:<20} | {:?}{:<5} | {:<5} | {:<5}",
             self.name(),
             self.output_shape(),
+            "",
             self.num_params(),
             self.num_muls(),
         )

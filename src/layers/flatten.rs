@@ -3,14 +3,16 @@ use ndarray::{Array1, ArrayD, ArrayViewD};
 use super::Layer;
 
 pub struct Flatten {
-    name: String,
+    name:        String,
+    input_shape: Vec<usize>,
 }
 
 impl Flatten {
     #[must_use]
-    pub fn new() -> Flatten {
+    pub fn new(input_shape: Vec<usize>) -> Flatten {
         Flatten {
             name: "flatten".into(),
+            input_shape,
         }
     }
 }
@@ -33,11 +35,17 @@ impl Layer for Flatten {
     }
 
     fn output_shape(&self) -> Vec<usize> {
-        todo!()
+        let mut output_shape = 1;
+
+        for i in self.input_shape() {
+            output_shape *= i;
+        }
+
+        vec![output_shape]
     }
 
     fn input_shape(&self) -> Vec<usize> {
-        todo!()
+        self.input_shape.clone()
     }
 }
 
@@ -55,7 +63,7 @@ mod test {
 
         let input = Array3::random_using((27, 17, 32), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
 
-        let flat = Flatten::new();
+        let flat = Flatten::new(vec![27, 17, 32]);
 
         let output = flat.apply(&input.into_dyn().view());
 

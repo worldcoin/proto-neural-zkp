@@ -98,10 +98,6 @@ pub mod test {
         // kernel
         let f = Array4::random_using((32, 5, 5, 32), Uniform::<f32>::new(-10., 10.), &mut rng);
 
-        let (c_out, hf, wf, c_in) = &f.dim();
-
-        dbg!(f.dim());
-        dbg!(x.dim());
         let conv = Convolution::new(f, vec![58, 38, 32]);
 
         let x = conv
@@ -175,7 +171,7 @@ pub mod test {
 
         // flatten
 
-        let flatten = Flatten::new();
+        let flatten = Flatten::new(vec![27, 17, 32]);
 
         let n_params = flatten.num_params();
         let n_multiplications = flatten.num_muls();
@@ -305,7 +301,7 @@ pub mod test {
 
         neural_net.add_layer(Box::new(MaxPool::new(2, vec![54, 34, 32])));
         neural_net.add_layer(Box::new(Relu::new(vec![27, 17, 32])));
-        neural_net.add_layer(Box::new(Flatten::new()));
+        neural_net.add_layer(Box::new(Flatten::new(vec![27, 17, 32])));
         let weights =
             Array2::random_using((1000, 14688), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
         let biases = Array1::random_using(1000, Uniform::<f32>::new(-10.0, 10.0), &mut rng);

@@ -1,30 +1,20 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
-use ndarray::{ArrayD, ArrayViewD, Ix1, Ix3};
+use ndarray::{ArrayD, ArrayViewD};
 
 use super::Layer;
 
 pub struct Relu {
-    name:   String,
-    params: usize,
+    name:        String,
+    input_shape: Vec<usize>,
 }
 
 impl Relu {
     #[must_use]
-    pub fn new() -> Self {
+    pub fn new(input_shape: Vec<usize>) -> Self {
         Self {
-            name:   "ReLU".into(),
-            params: 0,
+            name: "relu".into(),
+            input_shape,
         }
-    }
-
-    pub fn update_params(&mut self, output: &ArrayViewD<f32>) {
-        self.params = output.len();
-    }
-}
-
-impl Default for Relu {
-    fn default() -> Self {
-        Self::new()
     }
 }
 
@@ -38,27 +28,25 @@ impl Layer for Relu {
     }
 
     fn num_params(&self) -> usize {
-        self.params
+        let mut params = 1;
+
+        for i in self.input_shape() {
+            params *= i;
+        }
+
+        params
     }
 
-    fn num_muls(&self, _input: &ArrayViewD<f32>) -> usize {
+    fn num_muls(&self) -> usize {
         0
     }
 
-    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
-        if dim == 1 {
-            let input = input.clone().into_dimensionality::<Ix1>().unwrap();
+    fn output_shape(&self) -> Vec<usize> {
+        self.input_shape.clone()
+    }
 
-            Some(vec![input.len()])
-        } else if dim == 3 {
-            let input = input.clone().into_dimensionality::<Ix3>().unwrap();
-
-            let (h, w, c) = input.dim();
-
-            Some(vec![h, w, c])
-        } else {
-            None
-        }
+    fn input_shape(&self) -> Vec<usize> {
+        self.input_shape.clone()
     }
 }
 
@@ -75,15 +63,13 @@ pub mod test {
             [1.2, 3.4],
         ]]);
 
-        let mut relu = Relu::new();
+        let mut relu = Relu::new(vec![3, 2, 2]);
 
         let output = relu.apply(&input.clone().into_dyn().view());
 
-        relu.update_params(&output.view());
-
         let n_params = relu.num_params();
 
-        let n_multiplications = relu.num_muls(&input.into_dyn().view());
+        let n_multiplications = relu.num_muls();
 
         assert_eq!(
             output,
@@ -121,15 +107,13 @@ pub mod test {
     fn relu_test1() {
         let input = arr1(&[-4., -3.4, 6., 7., 1., -3.]).into_dyn();
 
-        let mut relu = Relu::new();
+        let mut relu = Relu::new(vec![6]);
 
         let output = relu.apply(&input.clone().into_dyn().view());
 
-        relu.update_params(&output.view());
-
         let n_params = relu.num_params();
 
-        let n_multiplications = relu.num_muls(&input.into_dyn().view());
+        let n_multiplications = relu.num_muls();
 
         assert_eq!(output, arr1(&[0., 0., 6., 7., 1., 0.]).into_dyn());
 

@@ -26,6 +26,7 @@ required-features = [ "bench", "proptest" ]
 
 [dependencies]
 anyhow = "1.0.53"
+auto_impl = "1.0.1"
 bytesize = "1.1.0"
 color-eyre = "0.6"
 criterion = { version = "0.3", optional = true, features = [ "async_tokio" ] }

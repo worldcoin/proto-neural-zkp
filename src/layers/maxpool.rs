@@ -3,29 +3,24 @@ use ndarray_stats::QuantileExt;
 
 use super::Layer;
 
-pub struct MaxPool<T> {
-    pub output:            Array3<T>,
-    pub n_params:          i32,
-    pub n_multiplications: usize,
-    pub name:              String,
-}
-
-pub struct MaxPooling {
+pub struct MaxPool {
     kernel_side: usize,
     name:        String,
+    input_shape: Vec<usize>,
 }
 
-impl MaxPooling {
+impl MaxPool {
     #[must_use]
-    pub fn new(kernel_side: usize) -> MaxPooling {
-        MaxPooling {
+    pub fn new(kernel_side: usize, input_shape: Vec<usize>) -> MaxPool {
+        MaxPool {
             name: "max-pool".into(),
             kernel_side,
+            input_shape,
         }
     }
 }
 
-impl Layer for MaxPooling {
+impl Layer for MaxPool {
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         let input = input.clone().into_dimensionality::<Ix3>().unwrap();
         let (h, w, c) = input.dim();
@@ -59,62 +54,31 @@ impl Layer for MaxPooling {
         0
     }
 
-    fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
-        input.len()
-    }
+    fn num_muls(&self) -> usize {
+        let mut muls = 1;
 
-    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
-        if dim == 3 {
-            let input = input.clone().into_dimensionality::<Ix3>().unwrap();
-            let (w, h, c) = input.dim();
-
-            assert!(h % self.kernel_side == 0, "Height must be divisible by s!");
-            assert!(w % self.kernel_side == 0, "Width must be divisible by s!");
-
-            Some(vec![w / self.kernel_side, h / self.kernel_side, c])
-        } else {
-            None
+        for i in self.input_shape() {
+            muls *= i;
         }
-    }
-}
 
-// TODO: Generalize for more dimensions and number types
-// @param input: h, w, c (3D Array)
-// h - height
-// w - width
-// c - channels
-// @param s - square filter side length (bigger -> more downsampling -> less
-// definition) output: Array3 -> Downsampled input where biggest value in filter
-// prevails
-pub fn max_pooling_layer(input: &Array3<f32>, s: usize) -> MaxPool<f32> {
-    let (h, w, c) = input.dim();
-
-    assert!(h % s == 0, "Height must be divisible by s!");
-    assert!(w % s == 0, "Width must be divisible by s!");
-
-    let mut output = Array3::<f32>::zeros((h / s, w / s, c));
-
-    // TODO: turn loops into iterators and parallelize with rayon or
-    // ndarray::parallel
-    // let h_iter = (0..h).into_par_iter().filter(|x| x % s == 0);
-    for i in (0..h).step_by(s) {
-        for j in (0..w).step_by(s) {
-            for k in 0..c {
-                let a = input.slice(s![i..i + s, j..j + s, k]);
-                // https://docs.rs/ndarray-stats/latest/ndarray_stats/trait.QuantileExt.html#tymethod.max
-                output[[i / s, j / s, k]] = *a.max().unwrap();
-            }
-        }
+        muls
     }
 
-    let n_params = 0;
-    let n_multiplications = input.len();
+    fn output_shape(&self) -> Vec<usize> {
+        let input_shape = self.input_shape();
 
-    MaxPool {
-        output,
-        n_params,
-        n_multiplications,
-        name: String::from("max-pool"),
+        let h = input_shape[0];
+        let w = input_shape[1];
+        let c = input_shape[2];
+
+        assert!(h % self.kernel_side == 0, "Height must be divisible by s!");
+        assert!(w % self.kernel_side == 0, "Width must be divisible by s!");
+
+        vec![w / self.kernel_side, h / self.kernel_side, c]
+    }
+
+    fn input_shape(&self) -> Vec<usize> {
+        self.input_shape.clone()
     }
 }
 
@@ -131,16 +95,16 @@ pub mod test {
 
         let input = Array3::random_using((116, 76, 32), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
 
-        let maxpool = MaxPooling::new(2);
+        let maxpool = MaxPool::new(2, vec![126, 76, 32]);
 
         let output = maxpool
-            .apply(&input.clone().into_dyn().view())
+            .apply(&input.into_dyn().view())
             .into_dimensionality::<Ix3>()
             .unwrap();
 
         let n_params = maxpool.num_params();
 
-        let n_multiplications = maxpool.num_muls(&input.into_dyn().view());
+        let n_multiplications = maxpool.num_muls();
 
         assert_eq!(output.dim(), (58, 38, 32));
 

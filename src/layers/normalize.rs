@@ -3,14 +3,16 @@ use ndarray::{ArrayD, ArrayViewD};
 use super::Layer;
 
 pub struct Normalize {
-    name: String,
+    name:        String,
+    input_shape: Vec<usize>,
 }
 
 impl Normalize {
     #[must_use]
-    pub fn new() -> Normalize {
+    pub fn new(input_shape: Vec<usize>) -> Normalize {
         Normalize {
-            name: "Normalize".into(),
+            name: "normalize".into(),
+            input_shape,
         }
     }
 }
@@ -30,16 +32,22 @@ impl Layer for Normalize {
         0
     }
 
-    fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
-        1 + input.len()
+    fn num_muls(&self) -> usize {
+        let mut muls = 1;
+
+        for i in self.input_shape() {
+            muls *= i;
+        }
+
+        1 + muls
     }
 
-    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
-        if dim == 1 {
-            Some(vec![input.len()])
-        } else {
-            None
-        }
+    fn output_shape(&self) -> Vec<usize> {
+        self.input_shape.clone()
+    }
+
+    fn input_shape(&self) -> Vec<usize> {
+        self.input_shape.clone()
     }
 }
 
@@ -58,7 +66,7 @@ mod test {
             7814137000.,
         ]);
 
-        let normalize = Normalize::new();
+        let normalize = Normalize::new(vec![5]);
 
         let output = normalize.apply(&input.into_dyn().view());
 

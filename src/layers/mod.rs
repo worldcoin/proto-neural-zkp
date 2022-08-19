@@ -1,6 +1,6 @@
-use std::fmt::Display;
+use std::fmt::{Display, Formatter, Result};
 
-use ndarray::{Array3, ArrayD, ArrayView3, ArrayViewD, Ix3};
+use ndarray::{ArrayD, ArrayViewD};
 
 pub mod conv;
 pub mod flatten;
@@ -13,6 +13,8 @@ pub trait Layer {
     #[must_use]
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32>;
 
+    fn input_shape(&self) -> Vec<usize>;
+
     #[must_use]
     fn name(&self) -> &str;
 
@@ -20,15 +22,21 @@ pub trait Layer {
     fn num_params(&self) -> usize;
 
     #[must_use]
-    fn num_muls(&self, input: &ArrayViewD<f32>) -> usize;
+    fn num_muls(&self) -> usize;
 
-    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>>;
+    fn output_shape(&self) -> Vec<usize>;
 }
 
-// TODO
 impl Display for Box<dyn Layer> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        todo!()
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        write!(
+            f,
+            "{:<20} | {:<15?} | {:<15} | {:<15}",
+            self.name(),
+            self.output_shape(),
+            self.num_params(),
+            self.num_muls(),
+        )
     }
 }
 
@@ -48,13 +56,21 @@ impl NeuralNetwork {
     pub fn apply(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<ArrayD<f32>> {
         if dim == 3 {
             let mut output = input.view().into_owned();
+
             for layer in &self.layers {
                 // TODO: add dimensionality sanity checks
                 output = layer.apply(&output.view());
+                println!("{}", layer);
             }
             Some(output)
         } else {
             None
         }
+    }
+}
+
+impl Default for NeuralNetwork {
+    fn default() -> Self {
+        Self::new()
     }
 }

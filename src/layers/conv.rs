@@ -1,29 +1,23 @@
-use std::fmt::format;
-
 use ndarray::{s, Array, Array3, Array4, ArrayD, ArrayViewD, Ix3};
 
 use super::Layer;
-
-//#[allow(clippy::module_name_repetitions)]
-// pub struct Conv2D<T> {
-//    pub output:            Array3<T>,
-//    pub n_params:          usize,
-//    pub n_multiplications: usize,
-//    pub name:              String,
-//}
-
 pub struct Convolution {
-    kernel: Array4<f32>,
-    name:   String,
+    kernel:      Array4<f32>,
+    name:        String,
+    input_shape: Vec<usize>,
 }
 
 impl Convolution {
     #[must_use]
-    pub fn new(kernel: Array4<f32>) -> Convolution {
+    pub fn new(kernel: Array4<f32>, input_shape: Vec<usize>) -> Convolution {
         let (c_out, hf, wf, c_in) = kernel.dim();
         let name = format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in);
 
-        Convolution { kernel, name }
+        Convolution {
+            kernel,
+            name,
+            input_shape,
+        }
     }
 }
 
@@ -36,12 +30,10 @@ impl Layer for Convolution {
         // output channels, kernel height, kernel width, input channels
         let (c_out, hf, wf, c_in) = self.kernel.dim();
 
-        // input channels must match
-        assert_eq!(c, c_in);
+        assert_eq!(c, c_in, "input channels must match");
 
-        // height and width of kernel must be an uneven number
-        assert!(hf % 2 == 1);
-        assert!(wf % 2 == 1);
+        assert!(hf % 2 == 1, "height of the kernel must be an odd number");
+        assert!(wf % 2 == 1, "width of the kernel must be an odd number");
 
         let window_dim = (hf, wf, c_in);
         let output_shape = (h - hf + 1, w - wf + 1);
@@ -62,8 +54,11 @@ impl Layer for Convolution {
         output.into_dyn()
     }
 
+    fn input_shape(&self) -> Vec<usize> {
+        self.input_shape.clone()
+    }
+
     fn name(&self) -> &str {
-        // Alt: format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in);
         &self.name
     }
 
@@ -71,94 +66,47 @@ impl Layer for Convolution {
         self.kernel.len()
     }
 
-    fn num_muls(&self, input: &ArrayViewD<f32>) -> usize {
-        let input = input.clone().into_dimensionality::<Ix3>().unwrap();
+    fn num_muls(&self) -> usize {
         // height, width, channels
-        let (h, w, c) = input.dim();
+        let input_shape = self.input_shape();
+
+        let h = input_shape[0];
+        let w = input_shape[1];
+        let c = input_shape[2];
 
         // output channels, kernel height, kernel width, input channels
         let (c_out, hf, wf, c_in) = self.kernel.dim();
 
-        // input channels must match
-        assert_eq!(c, c_in);
+        let output_shape = self.output_shape();
 
-        // height and width of kernel must be an uneven number
-        assert!(hf % 2 == 1);
-        assert!(wf % 2 == 1);
-
-        let output_shape = (h - hf + 1, w - wf + 1);
-
-        output_shape.0 * output_shape.1 * c_out * hf * wf * c_in
+        output_shape[0] * output_shape[1] * c_out * hf * wf
     }
 
-    fn output_shape(&self, input: &ArrayViewD<f32>, dim: usize) -> Option<Vec<usize>> {
-        if dim == 3 {
-            let input = input.clone().into_dimensionality::<Ix3>().unwrap();
-            let (h, w, _) = input.dim();
+    fn output_shape(&self) -> Vec<usize> {
+        let input_shape = self.input_shape();
 
-            // output channels, kernel height, kernel width, input channels
-            let (_, hf, wf, _) = self.kernel.dim();
+        let h = input_shape[0];
+        let w = input_shape[1];
+        let c = input_shape[2];
 
-            Some(vec![h - hf + 1, w - wf + 1])
-        } else {
-            None
-        }
+        // output channels, kernel height, kernel width, input channels
+        let (c_out, hf, wf, c_in) = self.kernel.dim();
+
+        assert_eq!(c, c_in, "input channels must match");
+
+        assert!(hf % 2 == 1, "height of the kernel must be an odd number");
+        assert!(wf % 2 == 1, "width of the kernel must be an odd number");
+
+        vec![h - hf + 1, w - wf + 1, c_out]
     }
 }
 
-//#[must_use]
-// pub fn convolution(input: &ArrayView3<f32>, kernels: &ArrayView4<f32>) ->
-// Conv2D<f32> {    // height, width, channels
-//    let (h, w, c) = input.dim();
-//
-//    // output channels, kernel height, kernel width, input channels
-//    let (c_out, hf, wf, c_in) = kernels.dim();
-//
-//    // input channels must match
-//    assert_eq!(c, c_in);
-//
-//    // height and width of kernel must be an uneven number
-//    assert!(hf % 2 == 1);
-//    assert!(wf % 2 == 1);
-//
-//    let window_dim = (hf, wf, c_in);
-//    let output_shape = (h - hf + 1, w - wf + 1);
-//    let mut output = Array3::zeros((output_shape.0, output_shape.1, c_out));
-//
-//    for i in 0..c_out {
-//        let mut output_mut = output.slice_mut(s![.., .., i]);
-//        let kernel = kernels.slice(s![i, .., .., ..]);
-//        let values = input
-//            .windows(window_dim)
-//            .into_iter()
-//            .map(|w| (&w * &kernel).sum());
-//        let values = Array::from_iter(values)
-//            .into_shape(output_shape)
-//            .expect("Kernel result dimensions mismatch");
-//        output_mut.assign(&values);
-//    }
-//
-//    let n_params = kernels.len();
-//    let name = format!("conv {}x{}x{}x{}", c_out, hf, wf, c_in);
-//    let n_multiplications = output.len() * hf * wf * c_in;
-//
-//    Conv2D {
-//        output,
-//        n_params,
-//        n_multiplications,
-//        name,
-//    }
-//}
-
-#[cfg(test)]
 mod test {
     use super::*;
-    use ndarray::array;
-    use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
-    use rand::rngs::StdRng;
 
     #[test]
     fn test_small() {
+        use ndarray::array;
         let input = array![
             [
                 [0.51682377_f32],
@@ -193,7 +141,7 @@ mod test {
             [[-22.043327], [8.725433], [-97.68271]]
         ];
 
-        let conv = Convolution::new(kernel);
+        let conv = Convolution::new(kernel, vec![1, 5, 5, 1]);
 
         let result = conv.apply(&input.into_dyn().view());
 
@@ -205,6 +153,8 @@ mod test {
 
     #[test]
     fn conv_test() {
+        use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
+        use rand::rngs::StdRng;
         // man of culture fixed randomness seed
         let seed = 694201337;
         let mut rng = StdRng::seed_from_u64(seed);
@@ -212,24 +162,14 @@ mod test {
         let input = Array3::random_using((120, 80, 3), Uniform::<f32>::new(-5., 5.), &mut rng);
         let kernel = Array4::random_using((32, 5, 5, 3), Uniform::<f32>::new(-10., 10.), &mut rng);
 
-        let (c_out, hf, wf, c_in) = &kernel.dim();
-
-        let conv = Convolution::new(kernel);
+        let conv = Convolution::new(kernel, vec![120, 80, 3]);
 
         let result = conv
-            .apply(&input.clone().into_dyn().view())
+            .apply(&input.into_dyn().view())
             .into_dimensionality::<Ix3>()
             .unwrap();
 
-        // // x is the result of  conv(input, kernel)
-        // let Conv2D::<f32> {
-        //     output: x,
-        //     n_params,
-        //     n_multiplications,
-        //     name,
-        // } = convolution(&input.view(), &kernel.view());
-
-        assert_eq!(result.dim(), (116, 76, 32));
+        assert_eq!(conv.output_shape(), vec![116, 76, 32]);
 
         let (dim_x, dim_y, dim_z) = result.dim();
 
@@ -243,7 +183,7 @@ mod test {
             dim_x,
             dim_y,
             dim_z,
-            conv.num_muls(&input.into_dyn().view()),
+            conv.num_muls(),
             conv.name(),
             result
         );

@@ -11,6 +11,7 @@ mod anyhow;
 
 pub mod layers;
 pub mod nn;
+pub mod serialize;
 
 use self::{allocator::Allocator, anyhow::MapAny as _};
 use bytesize::ByteSize;

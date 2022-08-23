@@ -41,6 +41,7 @@ rand = "0.8.4"
 rand_pcg = "0.3.1"
 rayon = "1.5.1"
 serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0.85"
 serde_cbor = "0.11.1"
 structopt = "0.3"
 thiserror = "1.0"
@@ -51,7 +52,7 @@ tracing-log = "0.1.2"
 tracing-subscriber = { version = "0.3", features = [ "env-filter", "json" ] }
 tracing-test = "0.2"
 log = "0.4.14"
-ndarray = "0.15.4"
+ndarray = {version = "0.15.4", features = ["serde"]}
 ndarray-rand = "0.14.0"
 ndarray-stats = " 0.5.0"
 rand_isaac = "0.3.0"

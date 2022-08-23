@@ -1,10 +1,12 @@
 #[cfg(test)]
 pub mod test {
+    use std::fs;
+
     use crate::layers::{
         conv::Convolution, flatten::Flatten, fully_connected::FullyConnected, maxpool::MaxPool,
         normalize::Normalize, relu::Relu, Layer, NeuralNetwork,
     };
-    use ndarray::{Array1, Array2, Array3, Array4, Ix3};
+    use ndarray::{ArcArray, Array1, Array2, Array3, Array4, Ix1, Ix2, Ix3, Ix4, IxDyn};
     use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
     use rand::rngs::StdRng;
     #[test]
@@ -310,6 +312,76 @@ pub mod test {
 
         let weights = Array2::random_using((5, 1000), Uniform::<f32>::new(-10.0, 10.0), &mut rng);
         let biases = Array1::random_using(5, Uniform::<f32>::new(-10.0, 10.0), &mut rng);
+
+        neural_net.add_layer(Box::new(FullyConnected::new(weights, biases)));
+        neural_net.add_layer(Box::new(Normalize::new(vec![5])));
+
+        let output = neural_net.apply(&input.into_dyn().view(), 3);
+
+        if output.is_some() {
+            println!("final output (normalized):\n{}", output.unwrap());
+        } else {
+            print!("Unsupported dimensionality of input Array");
+        }
+    }
+
+    #[test]
+    fn serde_neural_net() {
+        println!(
+            "{:<20} | {:<15} | {:<15} | {:<15}",
+            "layer", "output shape", "#parameters", "#ops"
+        );
+        println!("{:-<77}", "");
+
+        let data = fs::read_to_string("./src/json/initial.json").expect("Unable to read file");
+        let res = serde_json::from_str::<ArcArray<f32, Ix3>>(&data);
+
+        let input = res.unwrap();
+
+        let mut neural_net = NeuralNetwork::new();
+
+        let data = fs::read_to_string("./src/json/conv1.json").expect("Unable to read file");
+        let res = serde_json::from_str::<ArcArray<f32, Ix4>>(&data);
+
+        let kernel = res.unwrap().into_owned();
+
+        neural_net.add_layer(Box::new(Convolution::new(kernel, vec![120, 80, 3])));
+        neural_net.add_layer(Box::new(MaxPool::new(2, vec![116, 76, 32])));
+        neural_net.add_layer(Box::new(Relu::new(vec![58, 38, 32])));
+
+        let data = fs::read_to_string("./src/json/conv2.json").expect("Unable to read file");
+        let res = serde_json::from_str::<ArcArray<f32, Ix4>>(&data);
+
+        let kernel = res.unwrap().into_owned();
+
+        neural_net.add_layer(Box::new(Convolution::new(kernel, vec![58, 38, 32])));
+
+        neural_net.add_layer(Box::new(MaxPool::new(2, vec![54, 34, 32])));
+        neural_net.add_layer(Box::new(Relu::new(vec![27, 17, 32])));
+        neural_net.add_layer(Box::new(Flatten::new(vec![27, 17, 32])));
+
+        let data = fs::read_to_string("./src/json/weights1.json").expect("Unable to read file");
+        let res = serde_json::from_str::<ArcArray<f32, Ix2>>(&data);
+
+        let weights = res.unwrap().into_owned();
+
+        let data = fs::read_to_string("./src/json/biases1.json").expect("Unable to read file");
+        let res = serde_json::from_str::<ArcArray<f32, Ix1>>(&data);
+
+        let biases = res.unwrap().into_owned();
+
+        neural_net.add_layer(Box::new(FullyConnected::new(weights, biases)));
+        neural_net.add_layer(Box::new(Relu::new(vec![1000])));
+
+        let data = fs::read_to_string("./src/json/weights2.json").expect("Unable to read file");
+        let res = serde_json::from_str::<ArcArray<f32, Ix2>>(&data);
+
+        let weights = res.unwrap().into_owned();
+
+        let data = fs::read_to_string("./src/json/biases2.json").expect("Unable to read file");
+        let res = serde_json::from_str::<ArcArray<f32, Ix1>>(&data);
+
+        let biases = res.unwrap().into_owned();
 
         neural_net.add_layer(Box::new(FullyConnected::new(weights, biases)));
         neural_net.add_layer(Box::new(Normalize::new(vec![5])));

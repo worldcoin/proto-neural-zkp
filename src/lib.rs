@@ -1,15 +1,11 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 // Stabilized soon: https://github.com/rust-lang/rust/pull/93827
-#![feature(const_fn_trait_bound)]
 
 mod allocator;
 mod anyhow;
-pub mod conv;
-pub mod flatten;
-pub mod fully_connected;
-pub mod maxpool;
-pub mod normalize;
-pub mod relu;
+
+pub mod layers;
+pub mod nn;
 
 use self::{allocator::Allocator, anyhow::MapAny as _};
 use bytesize::ByteSize;
@@ -288,12 +284,11 @@ pub mod test {
 
     #[test]
     #[allow(clippy::eq_op)]
-    fn test_with_proptest() {
-        proptest!(|(a in 0..5, b in 0..5)| {
-            assert_eq!(a + b, b + a);
-        });
-    }
-
+    // fn test_with_proptest() {
+    //     proptest!(|(a in 0..5, b in 0..5)| {
+    //         assert_eq!(a + b, b + a);
+    //     });
+    // }
     #[test]
     #[traced_test]
     fn test_with_log_output() {

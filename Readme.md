@@ -94,3 +94,17 @@ test nn::bench_serde_neural_net ... bench: 151,632,316 ns/iter (+/- 1,469,992)
 ```
 
 In this benchmark the Rust implementation is **5.5x faster**!
+
+## Run tests
+
+Verify that all components of the rust codebase are working fine and that no breaking changes were introduced.
+
+```text
+cargo test 
+```
+
+In order to see output use `cargo test -- --output`, i.e.:
+
+```text
+cargo test nn::tests::serde_neural_net -- --show-output 
+```

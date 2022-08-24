@@ -5,6 +5,8 @@
 #![allow(clippy::missing_panics_doc)]
 // TODO
 #![allow(unreadable_literal)]
+// benchmarking
+#![feature(test)]
 
 mod allocator;
 mod anyhow;

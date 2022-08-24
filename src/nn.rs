@@ -473,13 +473,6 @@ fn bench_serde_neural_net(b: &mut Bencher) {
 
     // Python Vanilla CNN implementation, run time: 0.8297840171150046 (average over
     // 1000 runs on M1 Max Macbook Pro)
-    // std monotonic time
     b.iter(|| neural_net.apply(&input.clone().into_dyn().view(), 3));
-    // cargo bench - 0.151693329s +- 0.002147193s
-
-    // if output.is_some() {
-    //     println!("final output (normalized):\n{}", output.unwrap());
-    // } else {
-    //     print!("Unsupported dimensionality of input Array");
-    // }
+    // cargo bench - 0.151693329s +- 0.002147193s - (about 5.8x faster)
 }

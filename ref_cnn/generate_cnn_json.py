@@ -284,8 +284,6 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 assert(np.isclose(x, [ -9404869, -11033050, -34374361, -20396580,  70483360.]).all())
 
-print("\nfinal output:", x)
-
 # normalization
 x, n_params, n_multiplications, name = normalize(x)
 print(p.format(name, str(x.shape), n_params, n_multiplications))

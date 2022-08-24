@@ -100,9 +100,9 @@ def normalize(input):
 if __name__ == "__main__":
     
     np.random.seed(12345)
-    
+
     p = "{:>20} | {:>15} | {:>15} | {:>15} "
-    print(p.format("layer", "output shape", "#parameters", "#mulitplications"))
+    print(p.format("layer", "output shape", "#parameters", "#ops"))
     print(p.format("-"*20, "-"*15, "-"*15, "-"*15))
 
     # input
@@ -113,12 +113,12 @@ if __name__ == "__main__":
     x, n_params, n_multiplications, name = conv_layer(x, f)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
 
-    # relu layer
-    x, n_params, n_multiplications, name = relu_layer(x)
-    print(p.format(name, str(x.shape), n_params, n_multiplications))
-
     # max pooling
     x, n_params, n_multiplications, name =  max_pooling_layer(x, 2)
+    print(p.format(name, str(x.shape), n_params, n_multiplications))
+
+    # relu layer
+    x, n_params, n_multiplications, name = relu_layer(x)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
 
     # conv layer
@@ -126,12 +126,12 @@ if __name__ == "__main__":
     x, n_params, n_multiplications, name = conv_layer(x, f)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
 
-    # relu layer
-    x, n_params, n_multiplications, name = relu_layer(x)
-    print(p.format(name, str(x.shape), n_params, n_multiplications))
-
     # max pooling
     x, n_params, n_multiplications, name =  max_pooling_layer(x, 2)
+    print(p.format(name, str(x.shape), n_params, n_multiplications))
+
+    # relu layer
+    x, n_params, n_multiplications, name = relu_layer(x)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
 
     # flatten
@@ -153,6 +153,8 @@ if __name__ == "__main__":
     biases = np.random.randint(low=-10, high=+10, size=(5)) 
     x, n_params, n_multiplications, name = fully_connected_layer(x, weights, biases)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
+
+    assert(np.isclose(x, [ -9404869, -11033050, -34374361, -20396580,  70483360.]).all())
 
     # normalization
     x, n_params, n_multiplications, name = normalize(x)

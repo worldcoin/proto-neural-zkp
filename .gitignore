@@ -1,4 +1,3 @@
 /target
 .*
-.ipynb_checkpoints
-.vscode
+__pycache__

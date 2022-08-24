@@ -4,7 +4,7 @@ import numpy as np
 from vanilla_cnn import *
 
 if __name__ == "__main__":
-
+    
     # instantiate matrices outside of time it block
     np.random.seed(12345)
 
@@ -24,7 +24,9 @@ if __name__ == "__main__":
 
     times = []
 
-    for _ in range(1000):
+    runs = 100
+
+    for _ in range(runs):
         starttime = timeit.default_timer()
         # conv layer
         x, n_params, n_multiplications, name = conv_layer(x, f)
@@ -66,5 +68,5 @@ if __name__ == "__main__":
         x = np.random.randint(low=-5, high=5, size=(120, 80, 3))
 
     average = sum(times) / len(times)
-    average
-    # Result = 0.8297840171150046
+    print(f'The average time is {average}s for {runs} runs')
+    # Result = 0.8297840171150046 for 1000 runs

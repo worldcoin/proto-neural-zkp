@@ -1,5 +1,10 @@
-#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
+// #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 // Stabilized soon: https://github.com/rust-lang/rust/pull/93827
+
+// Disable globally while still iterating on design
+#![allow(clippy::missing_panics_doc)]
+// TODO
+#![allow(unreadable_literal)]
 
 mod allocator;
 mod anyhow;
@@ -99,6 +104,10 @@ fn dot(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Target 
     // len(co) = len (in) each coefficient needs to be a Goldilocks field
     // element (modular arithmetic inside a field element) CircuitBuilder.
     // mul_const_add()
+    // sum = co[0] * in[0] + co[1] * in[1] .... + co[len(co)] * in[len(in)] <=>
+    // len(co) = len (in) each coefficient needs to be a Goldilocks field
+    // element (modular arithmetic inside a field element) CircuitBuilder.
+    // mul_const_add()
     for (&coefficient, &input) in coefficients.iter().zip(input) {
         let coefficient = to_field(coefficient);
         sum = builder.mul_const_add(coefficient, input, sum);
@@ -120,6 +129,8 @@ fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Ta
 
     // output is a vector that contains dot products of coefficients and inputs,
     // len(output) = k
+    // output is a vector that contains dot products of coefficients and inputs,
+    // len(output) = k
     let mut output = Vec::with_capacity(output_size);
     // &[i32].chunks_exact() creates an iterator over k arrays of len(input)
     for coefficients in coefficients.chunks_exact(input_size) {
@@ -129,13 +140,6 @@ fn full(builder: &mut Builder, coefficients: &[i32], input: &[Target]) -> Vec<Ta
     builder.pop_context();
     output
 }
-
-// conv_layer
-
-// fn conv_layer(builder: &mut Builder, input: &Vec<Vec<Vec<Target>>>, filter:
-// &[Target]) {     let input.len()
-//
-// }
 
 // Plonky2 circuit
 struct Circuit {
@@ -282,14 +286,12 @@ pub mod test {
     use tracing::{error, warn};
     use tracing_test::traced_test;
 
-    #[test]
     #[allow(clippy::eq_op)]
     // fn test_with_proptest() {
     //     proptest!(|(a in 0..5, b in 0..5)| {
     //         assert_eq!(a + b, b + a);
     //     });
     // }
-    #[test]
     #[traced_test]
     fn test_with_log_output() {
         error!("logged on the error level");

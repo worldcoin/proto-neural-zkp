@@ -1,7 +1,12 @@
 [package]
 name = "neural-zkp"
 version = "0.1.0"
-edition = "2021"
+edition="2021"
+description = "A bunch of helpful ligence and zero knowledge"
+repository = "https://github.com/dcbuild3r/proto-neural-zkp/"
+readme = "README.md"
+keywords = ["zero knowledge", "ML", "neural network"]
+categories = ["cryptography tooling"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -21,6 +26,7 @@ required-features = [ "bench", "proptest" ]
 
 [dependencies]
 anyhow = "1.0.53"
+auto_impl = "1.0.1"
 bytesize = "1.1.0"
 color-eyre = "0.6"
 criterion = { version = "0.3", optional = true, features = [ "async_tokio" ] }

@@ -1,30 +1,58 @@
-#![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
-use ndarray::{Array1, Array3};
+use ndarray::{Array1, ArrayD, ArrayViewD};
 
-pub struct Flatten<T> {
-    pub output:            Array1<T>,
-    pub n_params:          i32,
-    pub n_multiplications: i32,
-    pub name:              String,
+use super::Layer;
+
+pub struct Flatten {
+    name:        String,
+    input_shape: Vec<usize>,
 }
 
-pub fn flatten_layer(input: &Array3<f32>) -> Flatten<f32> {
-    let n_params = 0;
-    let n_multiplications = 0;
+impl Flatten {
+    #[must_use]
+    pub fn new(input_shape: Vec<usize>) -> Flatten {
+        Flatten {
+            name: "flatten".into(),
+            input_shape,
+        }
+    }
+}
 
-    let output = Array1::from_iter(input.iter().map(|&x| x));
+impl Layer for Flatten {
+    fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
+        Array1::from_iter(input.iter().copied()).into_dyn()
+    }
 
-    Flatten {
-        output,
-        n_params,
-        n_multiplications,
-        name: String::from("flatten"),
+    fn name(&self) -> &str {
+        &self.name
+    }
+
+    fn num_params(&self) -> usize {
+        0
+    }
+
+    fn num_muls(&self) -> usize {
+        0
+    }
+
+    fn output_shape(&self) -> Vec<usize> {
+        let mut output_shape = 1;
+
+        for i in self.input_shape() {
+            output_shape *= i;
+        }
+
+        vec![output_shape]
+    }
+
+    fn input_shape(&self) -> Vec<usize> {
+        self.input_shape.clone()
     }
 }
 
 #[cfg(test)]
-pub mod test {
+mod test {
     use super::*;
+    use ndarray::Array3;
     use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
     use rand::rngs::StdRng;
 
@@ -35,14 +63,15 @@ pub mod test {
 
         let input = Array3::random_using((27, 17, 32), Uniform::<f32>::new(-5.0, 5.0), &mut rng);
 
-        let Flatten::<f32> {
-            output: x,
-            n_params,
-            n_multiplications,
-            name,
-        } = flatten_layer(&input);
+        let flat = Flatten::new(vec![27, 17, 32]);
 
-        assert_eq!(x.len(), 14688);
+        let output = flat.apply(&input.into_dyn().view());
+
+        let n_multiplications = flat.num_muls();
+
+        let n_params = flat.num_params();
+
+        assert_eq!(output.len(), 14688);
 
         println!(
             "
@@ -52,11 +81,11 @@ pub mod test {
         # of ops: {}\n
         output:\n
         {}",
-            name,
+            flat.name,
             n_params,
-            x.len(),
+            output.len(),
             n_multiplications,
-            x
+            output
         );
     }
 }

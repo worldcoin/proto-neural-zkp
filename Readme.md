@@ -73,7 +73,10 @@ final output (normalized):
 ## Benchmark Python vs Rust CNN implementations
 
 ```bash
-python ref_cnn/benchmark_cnn.py
+cd ref_cnn
+python benchmark_cnn.py
+# generates matrices for the Rust implementation to use 
+python generate_cnn_json.py
 cargo bench bench_serde_neural_net
 ```
 
@@ -84,7 +87,7 @@ Machine: M1 Max Macbook Pro
 - Python: 0.830s
 
 ```text
-The average time is 0.8297840171150046 for 1000 runs
+The average time is 0.8297840171150046 seconds for 1000 runs
 ```
 
 - Rust: 0.151s

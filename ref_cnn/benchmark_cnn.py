@@ -68,5 +68,5 @@ if __name__ == "__main__":
         x = np.random.randint(low=-5, high=5, size=(120, 80, 3))
 
     average = sum(times) / len(times)
-    print(f'The average time is {average}s for {runs} runs')
+    print(f'The average time is {average} seconds for {runs} runs')
     # Result = 0.8297840171150046 for 1000 runs

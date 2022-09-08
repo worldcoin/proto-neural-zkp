@@ -41,6 +41,15 @@ impl Display for Box<dyn Layer> {
     }
 }
 
+pub enum Layers {
+    Convolution    = 1,
+    MaxPool        = 2,
+    Relu           = 3,
+    Flatten        = 4,
+    FullyConnected = 5,
+    Normalize      = 6,
+}
+
 pub struct NeuralNetwork {
     layers: Vec<Box<dyn Layer>>,
 }

@@ -1,6 +1,6 @@
 #[cfg(test)]
 pub mod tests {
-    use ndarray::{arr2, ArcArray, Ix3, IxDyn};
+    use ndarray::{arr2, ArcArray, IxDyn};
     use serde_json;
     use std::fs;
 

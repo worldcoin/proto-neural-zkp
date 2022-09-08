@@ -1,13 +1,21 @@
+# Imports
 import json
 from json import JSONEncoder
 import numpy as np
+from enum import Enum
 
-class NumpyArrayEncoder(JSONEncoder):
+
+# Encoder
+class Encoder(JSONEncoder):
     def default(self, obj):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
+        elif isinstance(obj, Layer):
+            return obj.value
         return JSONEncoder.default(self, obj)
 
+
+# Layer definitions
 def conv_layer(input, f):
     """
     Evaluate the output of a convolutional layer using the filter f.
@@ -114,6 +122,20 @@ def normalize(input):
     n_multiplications = 1 + input.size
     return output, n_params, n_multiplications, "normalize"
 
+############
+#      Model    #
+############
+model = list()
+
+class Layer(Enum):
+    Convolution = 1,
+    MaxPool = 2,
+    Relu = 3,
+    Flatten = 4,
+    FullyConnected = 5,
+    Normalize = 6, 
+
+
 np.random.seed(12345)
 
 p = "{:>20} | {:>15} | {:>15} | {:>15} "
@@ -134,7 +156,7 @@ data = {
     "data": initial
     }
 
-json_data = json.dumps(data, cls=NumpyArrayEncoder)
+json_data = json.dumps(data, cls=Encoder)
 
 layers_json = {"initial":  json_data}
 
@@ -150,7 +172,14 @@ data = {
     "data": conv1
     }
 
-json_data = json.dumps(data, cls=NumpyArrayEncoder)
+conv = {
+    "layer_type": Layer.Convolution,
+    "parameters": [{"kernel":data}],
+}
+
+model.append(conv)
+
+json_data = json.dumps(data, cls=Encoder)
 
 layers_json["conv1"] = json_data
 
@@ -158,10 +187,24 @@ x, n_params, n_multiplications, name = conv_layer(x, f)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 # max pooling
+maxpool = {
+    "layer_type": Layer.MaxPool,
+    "parameters": [{"kernel_size": 2}],
+}
+
+model.append(maxpool)
+
 x, n_params, n_multiplications, name =  max_pooling_layer(x, 2)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 # relu layer
+relu = {
+    "layer_type": Layer.Relu,
+    "parameters": [],
+}
+
+model.append(relu)
+
 x, n_params, n_multiplications, name = relu_layer(x)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
@@ -178,7 +221,14 @@ data = {
     "data": conv2
     }
 
-json_data = json.dumps(data, cls=NumpyArrayEncoder)
+conv = {
+    "layer_type": Layer.Convolution,
+    "parameters": [{"kernel":data}],
+}
+
+model.append(conv)
+
+json_data = json.dumps(data, cls=Encoder)
 
 layers_json["conv2"] = json_data
 
@@ -186,14 +236,35 @@ x, n_params, n_multiplications, name = conv_layer(x, f)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 # max pooling
+maxpool = {
+    "layer_type": Layer.MaxPool,
+    "parameters": [{"kernel_size": 2}],
+}
+
+model.append(maxpool)
+
 x, n_params, n_multiplications, name =  max_pooling_layer(x, 2)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 # relu layer
+relu = {
+    "layer_type": Layer.Relu,
+    "parameters": [],
+}
+
+model.append(relu)
+
 x, n_params, n_multiplications, name = relu_layer(x)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 # flatten
+flatten = {
+    "layer_type": Layer.Flatten,
+    "parameters": [],
+}
+
+model.append(flatten)
+
 x, n_params, n_multiplications, name =  flatten_layer(x)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
@@ -210,7 +281,7 @@ data = {
     "data": weights1
 }
 
-json_data = json.dumps(data, cls=NumpyArrayEncoder)
+json_data = json.dumps(data, cls=Encoder)
 
 layers_json["weights1"] = json_data
 
@@ -219,14 +290,21 @@ shape = (1000,)
 biases = np.random.randint(low=-10, high=+10, size=(1000)) 
 biases1 = biases.flatten().astype(np.float32, copy=False)
 
-data = {
+data2 = {
     "v": 1,
     # ndarray can't take a single value, needs to be in json array
-    "dim": [1000],
+    "dim": 1000,
     "data": biases1
 }
 
-json_data = json.dumps(data, cls=NumpyArrayEncoder)
+fully_connected = {
+    "layer_type": Layer.FullyConnected,
+    "parameters":[{"weights":data}, {"biases": data2}]
+}
+
+model.append(fully_connected)
+
+json_data = json.dumps(data2, cls=Encoder)
 
 layers_json["biases1"] = json_data
 
@@ -234,6 +312,13 @@ x, n_params, n_multiplications, name = fully_connected_layer(x, weights, biases)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 # relu layer
+relu = {
+    "layer_type": Layer.Relu,
+    "parameters": [],
+}
+
+model.append(relu)
+
 x, n_params, n_multiplications, name = relu_layer(x)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
@@ -249,7 +334,7 @@ data = {
     "data": weights2
 }
 
-json_data = json.dumps(data, cls=NumpyArrayEncoder)
+json_data = json.dumps(data, cls=Encoder)
 
 layers_json["weights2"] = json_data
 
@@ -260,21 +345,27 @@ biases = np.random.randint(low=-10, high=+10, size=shape)
 
 biases2 = biases.flatten().astype(np.float32, copy=False)
 
-data = {
+data2 = {
     "v": 1,
     # ndarray can't take a single value, needs to be in json array
     "dim": [5],
     "data": biases2
 }
 
-json_data = json.dumps(data, cls=NumpyArrayEncoder)
+fully_connected = {
+    "layer_type": Layer.FullyConnected,
+    "parameters":[{"weights":data}, {"biases": data2}]
+}
+
+model.append(fully_connected)
+
+json_data = json.dumps(data2, cls=Encoder)
 
 layers_json["biases2"] = json_data
 
 # create files for arrays
 for layer, json_data in layers_json.items():
-
-    with open(f"../src/json/{layer}.json", "w") as f:
+    with open(f'../src/json/{layer}.json', "w") as f:
         print(f'created {layer}.json in the proto-neural-zkp/src/json folder')
         f.write(json_data)
 
@@ -285,7 +376,20 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 assert(np.isclose(x, [ -9404869, -11033050, -34374361, -20396580,  70483360.]).all())
 
 # normalization
+norm = {
+    "layer_type": Layer.Normalize,
+    "parameters": [],
+}
+
+model.append(norm)
+
 x, n_params, n_multiplications, name = normalize(x)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
+
+model_data = json.dumps(model, cls=Encoder)
+with open(f'../src/json/model.json', "w") as f:
+        print(f'created model.json in the proto-neural-zkp/src/json folder')
+        f.write(model_data)
+        
 
 print("\nfinal output:", x)

@@ -128,12 +128,12 @@ def normalize(input):
 model = list()
 
 class Layer(Enum):
-    Convolution = 1,
-    MaxPool = 2,
-    Relu = 3,
-    Flatten = 4,
-    FullyConnected = 5,
-    Normalize = 6, 
+    Convolution = 'convolution',
+    MaxPool = 'max_pool',
+    Relu = 'relu',
+    Flatten = 'flatten',
+    FullyConnected = 'fully_connected',
+    Normalize = 'normalize',
 
 
 np.random.seed(12345)
@@ -174,7 +174,7 @@ data = {
 
 conv = {
     "layer_type": Layer.Convolution,
-    "parameters": [{"kernel":data}],
+    "kernel":data
 }
 
 model.append(conv)
@@ -189,7 +189,7 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # max pooling
 maxpool = {
     "layer_type": Layer.MaxPool,
-    "parameters": [{"kernel_size": 2}],
+    "kernel_size": 2
 }
 
 model.append(maxpool)
@@ -200,7 +200,6 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # relu layer
 relu = {
     "layer_type": Layer.Relu,
-    "parameters": [],
 }
 
 model.append(relu)
@@ -223,7 +222,7 @@ data = {
 
 conv = {
     "layer_type": Layer.Convolution,
-    "parameters": [{"kernel":data}],
+    "kernel":data
 }
 
 model.append(conv)
@@ -238,7 +237,7 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # max pooling
 maxpool = {
     "layer_type": Layer.MaxPool,
-    "parameters": [{"kernel_size": 2}],
+    "kernel_size": 2
 }
 
 model.append(maxpool)
@@ -249,7 +248,6 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # relu layer
 relu = {
     "layer_type": Layer.Relu,
-    "parameters": [],
 }
 
 model.append(relu)
@@ -260,7 +258,6 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # flatten
 flatten = {
     "layer_type": Layer.Flatten,
-    "parameters": [],
 }
 
 model.append(flatten)
@@ -299,7 +296,8 @@ data2 = {
 
 fully_connected = {
     "layer_type": Layer.FullyConnected,
-    "parameters":[{"weights":data}, {"biases": data2}]
+    "weights":data,
+    "biases": data2
 }
 
 model.append(fully_connected)
@@ -314,7 +312,6 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # relu layer
 relu = {
     "layer_type": Layer.Relu,
-    "parameters": [],
 }
 
 model.append(relu)
@@ -354,7 +351,8 @@ data2 = {
 
 fully_connected = {
     "layer_type": Layer.FullyConnected,
-    "parameters":[{"weights":data}, {"biases": data2}]
+    "weights":data,
+    "biases": data2
 }
 
 model.append(fully_connected)
@@ -378,7 +376,6 @@ assert(np.isclose(x, [ -9404869, -11033050, -34374361, -20396580,  70483360.]).a
 # normalization
 norm = {
     "layer_type": Layer.Normalize,
-    "parameters": [],
 }
 
 model.append(norm)

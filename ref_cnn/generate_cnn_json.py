@@ -174,7 +174,8 @@ data = {
 
 conv = {
     "layer_type": Layer.Convolution,
-    "kernel":data
+    "input_shape": x.shape,
+    "kernel": data,
 }
 
 model.append(conv)
@@ -189,7 +190,8 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # max pooling
 maxpool = {
     "layer_type": Layer.MaxPool,
-    "kernel_size": 2
+    "input_shape": x.shape,
+    "kernel_size": 2,
 }
 
 model.append(maxpool)
@@ -200,6 +202,7 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # relu layer
 relu = {
     "layer_type": Layer.Relu,
+    "input_shape": x.shape
 }
 
 model.append(relu)
@@ -222,6 +225,7 @@ data = {
 
 conv = {
     "layer_type": Layer.Convolution,
+    "input_shape": x.shape,
     "kernel":data
 }
 
@@ -237,6 +241,7 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # max pooling
 maxpool = {
     "layer_type": Layer.MaxPool,
+    "input_shape": x.shape,
     "kernel_size": 2
 }
 
@@ -248,6 +253,7 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # relu layer
 relu = {
     "layer_type": Layer.Relu,
+    "input_shape": x.shape,
 }
 
 model.append(relu)
@@ -258,6 +264,7 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # flatten
 flatten = {
     "layer_type": Layer.Flatten,
+    "input_shape": x.shape,
 }
 
 model.append(flatten)
@@ -284,7 +291,7 @@ layers_json["weights1"] = json_data
 
 # biases json
 shape = (1000,)
-biases = np.random.randint(low=-10, high=+10, size=(1000)) 
+biases = np.random.randint(low=-10, high=+10, size=(1000))
 biases1 = biases.flatten().astype(np.float32, copy=False)
 
 data2 = {
@@ -296,6 +303,7 @@ data2 = {
 
 fully_connected = {
     "layer_type": Layer.FullyConnected,
+    "input_shape": x.shape,
     "weights":data,
     "biases": data2
 }
@@ -312,6 +320,7 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 # relu layer
 relu = {
     "layer_type": Layer.Relu,
+    "input_shape": x.shape,
 }
 
 model.append(relu)
@@ -351,6 +360,7 @@ data2 = {
 
 fully_connected = {
     "layer_type": Layer.FullyConnected,
+    "input_shape": x.shape,
     "weights":data,
     "biases": data2
 }
@@ -376,6 +386,7 @@ assert(np.isclose(x, [ -9404869, -11033050, -34374361, -20396580,  70483360.]).a
 # normalization
 norm = {
     "layer_type": Layer.Normalize,
+    "input_shape": x.shape,
 }
 
 model.append(norm)
@@ -384,9 +395,9 @@ x, n_params, n_multiplications, name = normalize(x)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 model_data = json.dumps(model, cls=Encoder)
-with open(f'../src/json/model.json', "w") as f:
-        print(f'created model.json in the proto-neural-zkp/src/json folder')
-        f.write(model_data)
-        
+with open('../src/json/model.json', "w") as f:
+    print('created model.json in the proto-neural-zkp/src/json folder')
+    f.write(model_data)
+
 
 print("\nfinal output:", x)

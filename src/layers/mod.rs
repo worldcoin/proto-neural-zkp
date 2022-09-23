@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result};
 
-use ndarray::{ArcArray, ArrayD, ArrayViewD, Ix1, Ix2, Ix3};
+use ndarray::{ArcArray, ArrayD, ArrayViewD, Ix1, Ix2, Ix3, Ix4};
 use serde::{Deserialize, Serialize};
 
 pub mod conv;
@@ -10,7 +10,7 @@ pub mod maxpool;
 pub mod normalize;
 pub mod relu;
 
-pub trait Layer: Into<LayerJson> {
+pub trait Layer {
     #[must_use]
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32>;
 
@@ -26,6 +26,9 @@ pub trait Layer: Into<LayerJson> {
     fn num_muls(&self) -> usize;
 
     fn output_shape(&self) -> Vec<usize>;
+
+    #[must_use]
+    fn to_json(&self) -> LayerJson;
 }
 
 impl Display for Box<dyn Layer> {
@@ -53,33 +56,41 @@ pub enum Layers {
     Normalize,
 }
 
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 pub enum LayerJson {
     Convolution {
-        kernel: ArcArray<f32, Ix3>,
+        kernel:      ArcArray<f32, Ix4>,
+        input_shape: Vec<usize>,
     },
     MaxPool {
-        window: usize,
+        window:      usize,
+        input_shape: Vec<usize>,
     },
     FullyConnected {
         weights: ArcArray<f32, Ix2>,
         biases:  ArcArray<f32, Ix1>,
     },
-    Relu,
-    Flatten,
-    Normalize,
+    Relu {
+        input_shape: Vec<usize>,
+    },
+    Flatten {
+        input_shape: Vec<usize>,
+    },
+    Normalize {
+        input_shape: Vec<usize>,
+    },
 }
 
-// Into for each layer
-impl Into<LayerJson> for conv::Convolution {
-    fn into(self) -> LayerJson {
-        LayerJson::Convolution {
-            kernel: self.kernel.clone(),
-        }
-    }
-}
+// // Into for each layer
+// impl Into<LayerJson> for conv::Convolution {
+//     fn into(self) -> LayerJson {
+//         LayerJson::Convolution {
+//             kernel: self.kernel.clone(),
+//         }
+//     }
+// }
 
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -92,14 +103,22 @@ impl TryFrom<LayerJson> for Box<dyn Layer> {
 
     fn try_from(value: LayerJson) -> std::result::Result<Self, ()> {
         Ok(match value {
-            LayerJson::Convolution { kernel } => Box::new(conv::Convolution::new(kernel)),
-            LayerJson::MaxPool { window } => Box::new(maxpool::MaxPool::new(window)),
-            LayerJson::FullyConnected { weights, biases } => {
-                Box::new(fully_connected::FullyConnected::new())
+            LayerJson::Convolution {
+                kernel,
+                input_shape,
+            } => Box::new(conv::Convolution::new(kernel.to_owned(), vec![120, 80, 3])),
+            LayerJson::MaxPool {
+                window,
+                input_shape,
+            } => Box::new(maxpool::MaxPool::new(window.to_owned(), input_shape)),
+            LayerJson::FullyConnected { weights, biases } => Box::new(
+                fully_connected::FullyConnected::new(weights.to_owned(), biases.to_owned()),
+            ),
+            LayerJson::Flatten { input_shape } => Box::new(flatten::Flatten::new(input_shape)),
+            LayerJson::Relu { input_shape } => Box::new(relu::Relu::new(input_shape)),
+            LayerJson::Normalize { input_shape } => {
+                Box::new(normalize::Normalize::new(input_shape))
             }
-            LayerJson::Flatten => Box::new(flatten::Flatten::new()),
-            LayerJson::Relu => Box::new(relu::Relu::new()),
-            LayerJson::Normalize => Box::new(normalize::Normalize::new()),
         })
     }
 }
@@ -107,7 +126,7 @@ impl TryFrom<LayerJson> for Box<dyn Layer> {
 impl From<NeuralNetwork> for NNJson {
     fn from(nn: NeuralNetwork) -> Self {
         Self {
-            layers: nn.layers.into_iter().map(|l| l.into()).collect(),
+            layers: nn.layers.into_iter().map(|l| l.to_json()).collect(),
         }
     }
 }
@@ -124,14 +143,6 @@ impl TryFrom<NNJson> for NeuralNetwork {
                 .collect::<Result<Vec<_>, _>>()?,
         })
     }
-}
-
-pub struct JSONLayer {
-    layer_type:  Layers,
-    kernel:      Option<ArcArray<f32, Ix3>>,
-    kernel_size: Option<i8>,
-    weights:     Option<ArcArray<f32, Ix2>>,
-    biases:      Option<ArcArray<f32, Ix1>>,
 }
 
 #[derive(Serialize, Deserialize)]

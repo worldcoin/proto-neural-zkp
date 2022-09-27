@@ -125,9 +125,7 @@ impl TryFrom<LayerJson> for Box<dyn Layer> {
 
 impl From<NeuralNetwork> for NNJson {
     fn from(nn: NeuralNetwork) -> Self {
-        Self {
-            layers: nn.layers.into_iter().map(|l| l.to_json()).collect(),
-        }
+        nn.layers.into_iter().map(|l| l.to_json()).collect()
     }
 }
 
@@ -139,7 +137,7 @@ impl TryFrom<NNJson> for NeuralNetwork {
             layers: value
                 .layers
                 .into_iter()
-                .map(|l| l.try_into())
+                .map(|l| l)
                 .collect::<Result<Vec<_>, _>>()?,
         })
     }

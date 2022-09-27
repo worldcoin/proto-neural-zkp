@@ -1,6 +1,6 @@
 use ndarray::{Array1, Array2, ArrayD, ArrayViewD, Ix1};
 
-use super::Layer;
+use super::{Layer, LayerJson};
 
 pub struct FullyConnected {
     weights: Array2<f32>,
@@ -62,6 +62,13 @@ impl Layer for FullyConnected {
 
     fn input_shape(&self) -> Vec<usize> {
         vec![self.weights.shape()[1]]
+    }
+
+    fn to_json(&self) -> LayerJson {
+        LayerJson::FullyConnected {
+            weights: self.weights.into(),
+            biases:  self.biases.into(),
+        }
     }
 }
 

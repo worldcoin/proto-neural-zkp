@@ -1,7 +1,7 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::{ArrayD, ArrayViewD};
 
-use super::Layer;
+use super::{Layer, LayerJson};
 
 pub struct Relu {
     name:        String,
@@ -47,6 +47,12 @@ impl Layer for Relu {
 
     fn input_shape(&self) -> Vec<usize> {
         self.input_shape.clone()
+    }
+
+    fn to_json(&self) -> LayerJson {
+        LayerJson::Relu {
+            input_shape: self.input_shape(),
+        }
     }
 }
 

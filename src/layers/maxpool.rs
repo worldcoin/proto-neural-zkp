@@ -1,7 +1,7 @@
 use ndarray::{s, Array3, ArrayD, ArrayViewD, Ix3};
 use ndarray_stats::QuantileExt;
 
-use super::Layer;
+use super::{Layer, LayerJson};
 
 pub struct MaxPool {
     kernel_side: usize,
@@ -79,6 +79,13 @@ impl Layer for MaxPool {
 
     fn input_shape(&self) -> Vec<usize> {
         self.input_shape.clone()
+    }
+
+    fn to_json(&self) -> LayerJson {
+        LayerJson::MaxPool {
+            window:      self.kernel_side,
+            input_shape: self.input_shape(),
+        }
     }
 }
 

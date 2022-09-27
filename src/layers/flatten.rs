@@ -1,6 +1,6 @@
 use ndarray::{Array1, ArrayD, ArrayViewD};
 
-use super::Layer;
+use super::{Layer, LayerJson};
 
 pub struct Flatten {
     name:        String,
@@ -20,6 +20,10 @@ impl Flatten {
 impl Layer for Flatten {
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         Array1::from_iter(input.iter().copied()).into_dyn()
+    }
+
+    fn input_shape(&self) -> Vec<usize> {
+        self.input_shape.clone()
     }
 
     fn name(&self) -> &str {
@@ -44,8 +48,10 @@ impl Layer for Flatten {
         vec![output_shape]
     }
 
-    fn input_shape(&self) -> Vec<usize> {
-        self.input_shape.clone()
+    fn to_json(&self) -> LayerJson {
+        LayerJson::Flatten {
+            input_shape: self.input_shape(),
+        }
     }
 }
 

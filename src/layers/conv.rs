@@ -1,6 +1,6 @@
 use ndarray::{s, Array, Array3, Array4, ArrayD, ArrayViewD, Ix3};
 
-use super::Layer;
+use super::{Layer, LayerJson};
 pub struct Convolution {
     kernel:      Array4<f32>,
     name:        String,
@@ -91,6 +91,13 @@ impl Layer for Convolution {
         assert!(wf % 2 == 1, "width of the kernel must be an odd number");
 
         vec![h - hf + 1, w - wf + 1, c_out]
+    }
+
+    fn to_json(&self) -> LayerJson {
+        LayerJson::Convolution {
+            kernel:      self.kernel.into(),
+            input_shape: self.input_shape(),
+        }
     }
 }
 

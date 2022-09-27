@@ -1,3 +1,4 @@
+use super::LayerJson;
 use ndarray::{ArrayD, ArrayViewD};
 
 use super::Layer;
@@ -24,6 +25,10 @@ impl Layer for Normalize {
         input.mapv(|x| x as f32 / norm).into_dyn()
     }
 
+    fn input_shape(&self) -> Vec<usize> {
+        self.input_shape.clone()
+    }
+
     fn name(&self) -> &str {
         &self.name
     }
@@ -46,8 +51,10 @@ impl Layer for Normalize {
         self.input_shape.clone()
     }
 
-    fn input_shape(&self) -> Vec<usize> {
-        self.input_shape.clone()
+    fn to_json(&self) -> LayerJson {
+        LayerJson::Normalize {
+            input_shape: self.input_shape(),
+        }
     }
 }
 

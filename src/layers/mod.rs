@@ -1,6 +1,6 @@
 use std::fmt::{Display, Formatter, Result};
 
-use ndarray::{ArcArray, ArrayD, ArrayViewD, Ix1, Ix2, Ix3, Ix4};
+use ndarray::{ArcArray, ArrayD, ArrayViewD, Ix1, Ix2, Ix4};
 use serde::{Deserialize, Serialize};
 
 pub mod conv;
@@ -45,18 +45,7 @@ impl Display for Box<dyn Layer> {
     }
 }
 
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Layers {
-    Convolution,
-    MaxPool,
-    Relu,
-    Flatten,
-    FullyConnected,
-    Normalize,
-}
-
-#[derive(Clone, PartialEq, Deserialize)]
+#[derive(Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 pub enum LayerJson {
@@ -83,19 +72,10 @@ pub enum LayerJson {
     },
 }
 
-// // Into for each layer
-// impl Into<LayerJson> for conv::Convolution {
-//     fn into(self) -> LayerJson {
-//         LayerJson::Convolution {
-//             kernel: self.kernel.clone(),
-//         }
-//     }
-// }
-
-#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub struct NNJson {
-    pub layers: Vec<Layers>,
+    pub layers: Vec<LayerJson>,
 }
 
 impl TryFrom<LayerJson> for Box<dyn Layer> {
@@ -123,6 +103,18 @@ impl TryFrom<LayerJson> for Box<dyn Layer> {
     }
 }
 
+impl FromIterator<LayerJson> for NNJson {
+    fn from_iter<T: IntoIterator<Item = LayerJson>>(iter: T) -> Self {
+        let mut nnvec = vec![];
+
+        for i in iter {
+            nnvec.push(i);
+        }
+
+        Self { layers: nnvec }
+    }
+}
+
 impl From<NeuralNetwork> for NNJson {
     fn from(nn: NeuralNetwork) -> Self {
         nn.layers.into_iter().map(|l| l.to_json()).collect()
@@ -137,13 +129,13 @@ impl TryFrom<NNJson> for NeuralNetwork {
             layers: value
                 .layers
                 .into_iter()
-                .map(|l| l)
-                .collect::<Result<Vec<_>, _>>()?,
+                .map(|i| i.try_into().unwrap())
+                .collect(),
         })
     }
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(into = "NNJson", try_from = "NNJson")]
 pub struct NeuralNetwork {
     layers: Vec<Box<dyn Layer>>,

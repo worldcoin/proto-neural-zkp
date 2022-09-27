@@ -2,14 +2,13 @@
 pub mod tests {
     use crate::layers::{
         conv::Convolution, flatten::Flatten, fully_connected::FullyConnected, maxpool::MaxPool,
-        normalize::Normalize, relu::Relu, Layer, Layers, NeuralNetwork,
+        normalize::Normalize, relu::Relu, Layer, NeuralNetwork,
     };
     use ndarray::{ArcArray, Array1, Array2, Array3, Array4, Ix1, Ix2, Ix3, Ix4};
     use ndarray_rand::{rand::SeedableRng, rand_distr::Uniform, RandomExt};
     use rand::rngs::StdRng;
-    use serde::{Deserialize, Serialize};
     use serde_json;
-    use std::{fs, sync::Arc};
+    use std::fs;
 
     #[test]
     fn neural_net() {

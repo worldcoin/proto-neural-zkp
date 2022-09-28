@@ -1,8 +1,10 @@
 use super::LayerJson;
 use ndarray::{ArrayD, ArrayViewD};
+use serde::Serialize;
 
 use super::Layer;
 
+#[derive(Clone, Serialize)]
 pub struct Normalize {
     name:        String,
     input_shape: Vec<usize>,
@@ -19,6 +21,10 @@ impl Normalize {
 }
 
 impl Layer for Normalize {
+    fn box_clone(&self) -> Box<dyn Layer> {
+        Box::new(self.clone())
+    }
+
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         let input = input.clone().mapv(|x| x as i128);
         let norm = f32::sqrt(input.mapv(|x| x.pow(2)).sum() as f32);

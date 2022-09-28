@@ -30,6 +30,7 @@ auto_impl = "1.0.1"
 bytesize = "1.1.0"
 color-eyre = "0.6"
 criterion = { version = "0.3", optional = true, features = [ "async_tokio" ] }
+erased-serde = "0.3"
 eyre = "0.6"
 futures = "0.3"
 itertools = "0.10"

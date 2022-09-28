@@ -1,8 +1,10 @@
 use ndarray::{s, Array3, ArrayD, ArrayViewD, Ix3};
 use ndarray_stats::QuantileExt;
+use serde::Serialize;
 
 use super::{Layer, LayerJson};
 
+#[derive(Clone, Serialize)]
 pub struct MaxPool {
     kernel_side: usize,
     name:        String,
@@ -21,6 +23,10 @@ impl MaxPool {
 }
 
 impl Layer for MaxPool {
+    fn box_clone(&self) -> Box<dyn Layer> {
+        Box::new(self.clone())
+    }
+
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         let input = input.clone().into_dimensionality::<Ix3>().unwrap();
         let (h, w, c) = input.dim();

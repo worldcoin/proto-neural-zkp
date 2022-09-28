@@ -1,8 +1,8 @@
 use std::fmt::{Display, Formatter, Result};
 
+use erased_serde::serialize_trait_object;
 use ndarray::{ArcArray, ArrayD, ArrayViewD, Ix1, Ix2, Ix4};
 use serde::{Deserialize, Serialize};
-use erased_serde::serialize_trait_object;
 
 pub mod conv;
 pub mod flatten;
@@ -30,7 +30,7 @@ pub trait Layer: erased_serde::Serialize {
 
     #[must_use]
     fn to_json(&self) -> LayerJson;
-    
+
     fn box_clone(&self) -> Box<dyn Layer>;
 }
 

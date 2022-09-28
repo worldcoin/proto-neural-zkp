@@ -1,7 +1,9 @@
 use ndarray::{Array1, ArrayD, ArrayViewD};
+use serde::Serialize;
 
 use super::{Layer, LayerJson};
 
+#[derive(Clone, Serialize)]
 pub struct Flatten {
     name:        String,
     input_shape: Vec<usize>,
@@ -18,6 +20,10 @@ impl Flatten {
 }
 
 impl Layer for Flatten {
+    fn box_clone(&self) -> Box<dyn Layer> {
+        Box::new(self.clone())
+    }
+
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         Array1::from_iter(input.iter().copied()).into_dyn()
     }

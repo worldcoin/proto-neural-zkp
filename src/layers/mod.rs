@@ -2,6 +2,7 @@ use std::fmt::{Display, Formatter, Result};
 
 use ndarray::{ArcArray, ArrayD, ArrayViewD, Ix1, Ix2, Ix4};
 use serde::{Deserialize, Serialize};
+use erased_serde::serialize_trait_object;
 
 pub mod conv;
 pub mod flatten;
@@ -10,7 +11,7 @@ pub mod maxpool;
 pub mod normalize;
 pub mod relu;
 
-pub trait Layer {
+pub trait Layer: erased_serde::Serialize {
     #[must_use]
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32>;
 
@@ -29,7 +30,11 @@ pub trait Layer {
 
     #[must_use]
     fn to_json(&self) -> LayerJson;
+    
+    fn box_clone(&self) -> Box<dyn Layer>;
 }
+
+serialize_trait_object!(Layer);
 
 impl Display for Box<dyn Layer> {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
@@ -42,6 +47,16 @@ impl Display for Box<dyn Layer> {
             self.num_params(),
             self.num_muls(),
         )
+    }
+}
+
+impl Clone for Box<dyn Layer> {
+    fn clone(&self) -> Self {
+        //    self -> &Box<dyn Layer>
+        //   *self ->  Box<dyn Layer>
+        //  **self ->      dyn Layer
+        // &**self ->     &dyn Layer
+        Layer::box_clone(&**self)
     }
 }
 
@@ -135,8 +150,7 @@ impl TryFrom<NNJson> for NeuralNetwork {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
-#[serde(into = "NNJson", try_from = "NNJson")]
+#[derive(Clone, Serialize)]
 pub struct NeuralNetwork {
     layers: Vec<Box<dyn Layer>>,
 }

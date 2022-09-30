@@ -56,7 +56,32 @@ pub mod tests {
         let input = serde_json::from_str::<ArcArray<f32, Ix3>>(&input_json).unwrap();
 
         // deserialize model
-        let neural_net = deserialize_model_json("./src/json/model.json".into());
+        let neural_net = deserialize_model_json("./src/json/model.json");
+
+        // run inference
+        let output = neural_net.apply(&input.into_dyn().view(), 3);
+
+        if output.is_some() {
+            println!("final output (normalized):\n{}", output.unwrap());
+        } else {
+            print!("Unsupported dimensionality of input Array");
+        }
+    }
+
+    #[test]
+    fn serde_full_circle() {
+        serialize_model_json("./src/json/nn.json", create_neural_net());
+
+        // initial log
+        log_nn_table();
+
+        // deserialize input JSON file into an ArcArray
+        let input_json =
+            fs::read_to_string("./src/json/initial.json").expect("Unable to read file");
+        let input = serde_json::from_str::<ArcArray<f32, Ix3>>(&input_json).unwrap();
+
+        // deserialize model
+        let neural_net = deserialize_model_json("./src/json/nn.json");
 
         // run inference
         let output = neural_net.apply(&input.into_dyn().view(), 3);

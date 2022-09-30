@@ -191,7 +191,7 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 maxpool = {
     "layer_type": Layer.MaxPool,
     "input_shape": x.shape,
-    "kernel_size": 2,
+    "window": 2,
 }
 
 model.append(maxpool)
@@ -242,7 +242,7 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 maxpool = {
     "layer_type": Layer.MaxPool,
     "input_shape": x.shape,
-    "kernel_size": 2
+    "window": 2
 }
 
 model.append(maxpool)

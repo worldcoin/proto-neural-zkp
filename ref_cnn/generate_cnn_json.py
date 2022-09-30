@@ -3,6 +3,11 @@ import json
 from json import JSONEncoder
 import numpy as np
 from enum import Enum
+import re
+
+def camel_to_snake(name):
+    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
 
 
 # Encoder
@@ -11,7 +16,7 @@ class Encoder(JSONEncoder):
         if isinstance(obj, np.ndarray):
             return obj.tolist()
         elif isinstance(obj, Layer):
-            return obj.value
+            return camel_to_snake(obj.name)
         return JSONEncoder.default(self, obj)
 
 
@@ -125,7 +130,6 @@ def normalize(input):
 ############
 #      Model    #
 ############
-model = list()
 
 class Layer(Enum):
     Convolution = 'convolution',
@@ -178,8 +182,7 @@ conv = {
     "kernel": data,
 }
 
-model.append(conv)
-
+model = [conv]
 json_data = json.dumps(data, cls=Encoder)
 
 layers_json["conv1"] = json_data
@@ -290,14 +293,14 @@ json_data = json.dumps(data, cls=Encoder)
 layers_json["weights1"] = json_data
 
 # biases json
-shape = (1000,)
+shape = [1000]
 biases = np.random.randint(low=-10, high=+10, size=(1000))
 biases1 = biases.flatten().astype(np.float32, copy=False)
 
 data2 = {
     "v": 1,
     # ndarray can't take a single value, needs to be in json array
-    "dim": 1000,
+    "dim": shape,
     "data": biases1
 }
 
@@ -345,7 +348,7 @@ json_data = json.dumps(data, cls=Encoder)
 layers_json["weights2"] = json_data
 
 
-shape = (5,)
+shape = [5]
 biases = np.random.randint(low=-10, high=+10, size=shape) 
 
 

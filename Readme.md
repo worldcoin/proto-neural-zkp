@@ -52,7 +52,7 @@ final output: [-0.11425511 -0.13403508 -0.41759714 -0.24778798  0.85626755]
 - Rust
 
 ```text
----- nn::tests::serde_neural_net stdout ----
+---- nn::tests::bench_neural_net stdout ----
 layer                | output shape    | #parameters     | #ops           
 -----------------------------------------------------------------------------
 conv 32x5x5x3        | [116, 76, 32]      | 2400  | 7052800

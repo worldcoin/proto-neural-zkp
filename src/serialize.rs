@@ -2,15 +2,28 @@
 pub mod tests {
     use ndarray::{ArcArray, Ix3};
     use serde_json;
-    use std::fs;
+    use std::{fs, io::prelude::*};
 
     extern crate test;
     use test::Bencher;
 
     use crate::layers::{NNJson, NeuralNetwork};
 
+    use crate::nn::create_neural_net;
+
     #[test]
-    fn serialize_model_json() {}
+    fn serialize_model_json() {
+        let mut file =
+            fs::File::create("./src/json/nn.json").expect("Error encountered while creating file!");
+
+        let model = create_neural_net();
+
+        let model_json: NNJson = model.into();
+
+        file.write_all(serde_json::to_string(&model_json).unwrap().as_bytes())
+            .expect("Unable to write data");
+    }
+
     #[test]
     fn deserialize_model_json() {
         println!(

@@ -62,7 +62,7 @@ impl Clone for Box<dyn Layer> {
 
 #[derive(Clone, PartialEq, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case")]
-#[serde(tag = "type")]
+#[serde(tag = "layer_type")]
 pub enum LayerJson {
     Convolution {
         kernel:      ArcArray<f32, Ix4>,
@@ -101,7 +101,7 @@ impl TryFrom<LayerJson> for Box<dyn Layer> {
             LayerJson::Convolution {
                 kernel,
                 input_shape,
-            } => Box::new(conv::Convolution::new(kernel.to_owned(), vec![120, 80, 3])),
+            } => Box::new(conv::Convolution::new(kernel.to_owned(), input_shape)),
             LayerJson::MaxPool {
                 window,
                 input_shape,

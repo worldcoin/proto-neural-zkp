@@ -391,6 +391,10 @@ norm = {
 
 model.append(norm)
 
+model = {
+    "layers": model
+}
+
 x, n_params, n_multiplications, name = normalize(x)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 

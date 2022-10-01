@@ -155,10 +155,6 @@ data = {
     "data": initial
     }
 
-json_data = json.dumps(data, cls=Encoder)
-
-layers_json = {"initial":  json_data}
-
 # conv layer
 shape = (32,5,5,3)
 f = np.random.randint(low=-10, high=+10, size=shape) 
@@ -178,9 +174,6 @@ conv = {
 }
 
 model = [conv]
-json_data = json.dumps(data, cls=Encoder)
-
-layers_json["conv1"] = json_data
 
 x, n_params, n_multiplications, name = conv_layer(x, f)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
@@ -229,10 +222,6 @@ conv = {
 
 model.append(conv)
 
-json_data = json.dumps(data, cls=Encoder)
-
-layers_json["conv2"] = json_data
-
 x, n_params, n_multiplications, name = conv_layer(x, f)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
@@ -272,31 +261,24 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 # fully connected
 shape = (1000, x.shape[0])
-weights = np.random.randint(low=-10, high=+10, size=shape) 
+weights = np.random.randint(low=-10, high=+10, size=shape)
 
 # weights json
-weights1 = weights.flatten().astype(np.float32, copy=False)
-
 data = {
     "v": 1,
     "dim": shape,
-    "data": weights1
+    "data": weights.flatten().astype(np.float32, copy=False)
 }
-
-json_data = json.dumps(data, cls=Encoder)
-
-layers_json["weights1"] = json_data
 
 # biases json
 shape = [1000]
 biases = np.random.randint(low=-10, high=+10, size=(1000))
-biases1 = biases.flatten().astype(np.float32, copy=False)
 
 data2 = {
     "v": 1,
     # ndarray can't take a single value, needs to be in json array
     "dim": shape,
-    "data": biases1
+    "data": biases.flatten().astype(np.float32, copy=False)
 }
 
 fully_connected = {
@@ -307,10 +289,6 @@ fully_connected = {
 }
 
 model.append(fully_connected)
-
-json_data = json.dumps(data2, cls=Encoder)
-
-layers_json["biases1"] = json_data
 
 x, n_params, n_multiplications, name = fully_connected_layer(x, weights, biases)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
@@ -328,32 +306,22 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 # fully connected
 shape = (5, x.shape[0])
-weights = np.random.randint(low=-10, high=+10, size=shape) 
-
-weights2 = weights.flatten().astype(np.float32, copy=False)
+weights = np.random.randint(low=-10, high=+10, size=shape)
 
 data = {
     "v": 1,
     "dim": shape,
-    "data": weights2
+    "data": weights.flatten().astype(np.float32, copy=False)
 }
 
-json_data = json.dumps(data, cls=Encoder)
-
-layers_json["weights2"] = json_data
-
-
 shape = [5]
-biases = np.random.randint(low=-10, high=+10, size=shape) 
-
-
-biases2 = biases.flatten().astype(np.float32, copy=False)
+biases = np.random.randint(low=-10, high=+10, size=shape)
 
 data2 = {
     "v": 1,
     # ndarray can't take a single value, needs to be in json array
     "dim": [5],
-    "data": biases2
+    "data": biases.flatten().astype(np.float32, copy=False)
 }
 
 fully_connected = {
@@ -364,17 +332,6 @@ fully_connected = {
 }
 
 model.append(fully_connected)
-
-json_data = json.dumps(data2, cls=Encoder)
-
-layers_json["biases2"] = json_data
-
-# create files for arrays
-for layer, json_data in layers_json.items():
-    with open(f'../src/json/{layer}.json', "w") as f:
-        print(f'created {layer}.json in the proto-neural-zkp/src/json folder')
-        f.write(json_data)
-
 
 x, n_params, n_multiplications, name = fully_connected_layer(x, weights, biases)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
@@ -396,10 +353,11 @@ model = {
 x, n_params, n_multiplications, name = normalize(x)
 print(p.format(name, str(x.shape), n_params, n_multiplications))
 
-model_data = json.dumps(model, cls=Encoder)
-with open('../src/json/model.json', "w") as f:
-    print('created model.json in the proto-neural-zkp/src/json folder')
-    f.write(model_data)
-
 
 print("\nfinal output:", x)
+
+
+model_data = json.dumps(model, cls=Encoder)
+with open('../src/json/model.json', "w") as f:
+    print('\ncreated model.json in the proto-neural-zkp/src/json folder')
+    f.write(model_data)

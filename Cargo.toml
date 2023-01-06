@@ -44,7 +44,7 @@ serde = { version = "1.0", features = ["derive"] }
 serde_cbor = "0.11.1"
 structopt = "0.3"
 thiserror = "1.0"
-tokio = { version = "1.15", features = [ "signal", "macros", "rt", "sync", "time", "rt-multi-thread", "tracing" ] }
+tokio = { version = "1.20", features = [ "signal", "macros", "rt", "sync", "time", "rt-multi-thread", "tracing" ] }
 tracing = "0.1"
 tracing-futures = "0.2"
 tracing-log = "0.1.2"

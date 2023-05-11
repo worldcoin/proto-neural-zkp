@@ -1,6 +1,9 @@
 use ndarray::{s, Array, Array3, Array4, ArrayD, ArrayViewD, Ix3};
+use serde::Serialize;
 
-use super::Layer;
+use super::{Layer, LayerJson};
+
+#[derive(Clone, Serialize)]
 pub struct Convolution {
     kernel:      Array4<f32>,
     name:        String,
@@ -22,6 +25,10 @@ impl Convolution {
 }
 
 impl Layer for Convolution {
+    fn box_clone(&self) -> Box<dyn Layer> {
+        Box::new(self.clone())
+    }
+    
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         // height, width, channels
         let input = input.clone().into_dimensionality::<Ix3>().unwrap();
@@ -91,6 +98,13 @@ impl Layer for Convolution {
         assert!(wf % 2 == 1, "width of the kernel must be an odd number");
 
         vec![h - hf + 1, w - wf + 1, c_out]
+    }
+
+    fn to_json(&self) -> LayerJson {
+        LayerJson::Convolution {
+            kernel:      self.kernel.clone().into(),
+            input_shape: self.input_shape(),
+        }
     }
 }
 

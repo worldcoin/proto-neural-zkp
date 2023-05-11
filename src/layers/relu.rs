@@ -1,8 +1,10 @@
 #![warn(clippy::all, clippy::pedantic, clippy::cargo, clippy::nursery)]
 use ndarray::{ArrayD, ArrayViewD};
+use serde::Serialize;
 
-use super::Layer;
+use super::{Layer, LayerJson};
 
+#[derive(Clone, Serialize)]
 pub struct Relu {
     name:        String,
     input_shape: Vec<usize>,
@@ -19,6 +21,9 @@ impl Relu {
 }
 
 impl Layer for Relu {
+    fn box_clone(&self) -> Box<dyn Layer> {
+        Box::new(self.clone())
+    }
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         input.mapv(|x| f32::max(0.0, x))
     }
@@ -47,6 +52,12 @@ impl Layer for Relu {
 
     fn input_shape(&self) -> Vec<usize> {
         self.input_shape.clone()
+    }
+
+    fn to_json(&self) -> LayerJson {
+        LayerJson::Relu {
+            input_shape: self.input_shape(),
+        }
     }
 }
 

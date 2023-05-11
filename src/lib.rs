@@ -5,12 +5,15 @@
 #![allow(clippy::missing_panics_doc)]
 // TODO
 #![allow(unreadable_literal)]
+// benchmarking
+#![feature(test)]
 
 mod allocator;
 mod anyhow;
 
 pub mod layers;
 pub mod nn;
+pub mod serialize;
 
 use self::{allocator::Allocator, anyhow::MapAny as _};
 use bytesize::ByteSize;

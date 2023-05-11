@@ -1,7 +1,9 @@
 use ndarray::{Array1, Array2, ArrayD, ArrayViewD, Ix1};
+use serde::Serialize;
 
-use super::Layer;
+use super::{Layer, LayerJson};
 
+#[derive(Clone, Serialize)]
 pub struct FullyConnected {
     weights: Array2<f32>,
     biases:  Array1<f32>,
@@ -20,6 +22,10 @@ impl FullyConnected {
 }
 
 impl Layer for FullyConnected {
+    fn box_clone(&self) -> Box<dyn Layer> {
+        Box::new(self.clone())
+    }
+
     fn apply(&self, input: &ArrayViewD<f32>) -> ArrayD<f32> {
         assert!(input.ndim() == 1, "Input must be a flattenened array!");
         assert!(
@@ -62,6 +68,13 @@ impl Layer for FullyConnected {
 
     fn input_shape(&self) -> Vec<usize> {
         vec![self.weights.shape()[1]]
+    }
+
+    fn to_json(&self) -> LayerJson {
+        LayerJson::FullyConnected {
+            weights: self.weights.clone().into(),
+            biases:  self.biases.clone().into(),
+        }
     }
 }
 

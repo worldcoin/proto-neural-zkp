@@ -1,2 +1,4 @@
 /target
 .*
+__pycache__
+/src/json/*

@@ -71,7 +71,7 @@ def flatten_layer(input):
     return output, n_params, n_multiplications, "flatten"
 
 
-def fully_connected_layter(input, weights, biases):
+def fully_connected_layer(input, weights, biases):
     """
     Evaluate the output of a fully connected layer.
     input.shape = (output_dim)
@@ -90,14 +90,19 @@ def fully_connected_layter(input, weights, biases):
     
     return output, n_params, n_multiplications, name
 
+def normalize(input):
+    output = input / np.linalg.norm(input)
+    n_params = 0
+    n_multiplications = 1 + input.size
+    return output, n_params, n_multiplications, "normalize"
 
 
 if __name__ == "__main__":
     
     np.random.seed(12345)
-    
+
     p = "{:>20} | {:>15} | {:>15} | {:>15} "
-    print(p.format("layer", "output shape", "#parameters", "#mulitplications"))
+    print(p.format("layer", "output shape", "#parameters", "#ops"))
     print(p.format("-"*20, "-"*15, "-"*15, "-"*15))
 
     # input
@@ -108,12 +113,12 @@ if __name__ == "__main__":
     x, n_params, n_multiplications, name = conv_layer(x, f)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
 
-    # relu layer
-    x, n_params, n_multiplications, name = relu_layer(x)
-    print(p.format(name, str(x.shape), n_params, n_multiplications))
-
     # max pooling
     x, n_params, n_multiplications, name =  max_pooling_layer(x, 2)
+    print(p.format(name, str(x.shape), n_params, n_multiplications))
+
+    # relu layer
+    x, n_params, n_multiplications, name = relu_layer(x)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
 
     # conv layer
@@ -121,12 +126,12 @@ if __name__ == "__main__":
     x, n_params, n_multiplications, name = conv_layer(x, f)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
 
-    # relu layer
-    x, n_params, n_multiplications, name = relu_layer(x)
-    print(p.format(name, str(x.shape), n_params, n_multiplications))
-
     # max pooling
     x, n_params, n_multiplications, name =  max_pooling_layer(x, 2)
+    print(p.format(name, str(x.shape), n_params, n_multiplications))
+
+    # relu layer
+    x, n_params, n_multiplications, name = relu_layer(x)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
 
     # flatten
@@ -136,7 +141,7 @@ if __name__ == "__main__":
     # fully connected
     weights = np.random.randint(low=-10, high=+10, size=(1000, x.shape[0])) 
     biases = np.random.randint(low=-10, high=+10, size=(1000)) 
-    x, n_params, n_multiplications, name = fully_connected_layter(x, weights, biases)
+    x, n_params, n_multiplications, name = fully_connected_layer(x, weights, biases)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
 
     # relu layer
@@ -146,10 +151,13 @@ if __name__ == "__main__":
     # fully connected
     weights = np.random.randint(low=-10, high=+10, size=(5, x.shape[0])) 
     biases = np.random.randint(low=-10, high=+10, size=(5)) 
-    x, n_params, n_multiplications, name = fully_connected_layter(x, weights, biases)
+    x, n_params, n_multiplications, name = fully_connected_layer(x, weights, biases)
     print(p.format(name, str(x.shape), n_params, n_multiplications))
-    
-    
-    
-    
-    print("\nfinal outout:", x)
+
+    assert(np.isclose(x, [ -9404869, -11033050, -34374361, -20396580,  70483360.]).all())
+
+    # normalization
+    x, n_params, n_multiplications, name = normalize(x)
+    print(p.format(name, str(x.shape), n_params, n_multiplications))
+
+    print("\nfinal output:", x)

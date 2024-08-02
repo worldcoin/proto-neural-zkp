@@ -4,6 +4,7 @@ from json import JSONEncoder
 import numpy as np
 from enum import Enum
 import re
+import os
 
 # Encoder
 class Encoder(JSONEncoder):
@@ -149,7 +150,7 @@ x = np.random.randint(low=-5, high=5, size=shape)
 
 initial = x.flatten().astype(np.float32, copy=False)
 
-data = {
+initial = {
     "v": 1,
     "dim": shape,
     "data": initial
@@ -356,8 +357,16 @@ print(p.format(name, str(x.shape), n_params, n_multiplications))
 
 print("\nfinal output:", x)
 
+# create json files
+if not os.path.exists('../src/json/'):
+    os.makedirs('../src/json/')
+
+initial_data = json.dumps(initial, cls=Encoder)
+with open('../src/json/initial.json', "w") as f:
+    print('\ncreated initial.json in the proto-neural-zkp/src/json folder')
+    f.write(initial_data)
 
 model_data = json.dumps(model, cls=Encoder)
 with open('../src/json/model.json', "w") as f:
-    print('\ncreated model.json in the proto-neural-zkp/src/json folder')
+    print('created model.json in the proto-neural-zkp/src/json folder')
     f.write(model_data)

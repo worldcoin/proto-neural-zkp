@@ -2,7 +2,7 @@ name: Relyance SCI Scan
 
 on:
   schedule:
-    - cron: "0 20 * * *"
+    - cron: "11 0 * * *"
   workflow_dispatch:
 
 jobs:
